@@ -50,9 +50,23 @@ $ docker build -t cetea .
 
 Run the docker image
 ```
-$ docker run -p 8080:8080 -ti cetea
+$ docker run -p 8081:8080 -ti cetea
 ```
 
+### Unix
+
+```
+$ vim ~/bashrc
+$ source ~/.bashrc
+$ export $GOPATH=~/go_workspace
+$ export $GOBIN=$GOPATH/bin
+```
+
+```
+$ ps ax | grep java
+$ top
+$ netstat -an | grep 80
+```
 ### Useful links
 
 *  [Deploying Go web app on GCP](https://medium.com/martinomburajr/building-a-go-web-app-from-scratch-to-deploying-on-google-cloud-part-0-intro-a6bf26972ce5)
