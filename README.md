@@ -9,6 +9,20 @@ to have such a REDIRECT_URI defined, but to make the Go client happy,
 specify REDIRECT_URI as the Authorized JS origin defined in the client
 credentials in GCP.
 
+### Tools
+
+#### Gin
+
+https://github.com/codegangsta/gin
+
+Gin watches for changes to .go in the source directory and rebuilds.
+It is a proxy server which redirects traffic to the app's port.
+
+```
+go get github.com/codegangsta/gin
+gin -a 8080 --path . --immediate
+```
+
 ### Git
 
 ```
@@ -83,3 +97,4 @@ $ netstat -an | grep 80
 *  [vs io.WriteString vs responseWriter.Write vs fmt.Fprintf](https://stackoverflow.com/questions/37863374/whats-the-difference-between-responsewriter-write-and-io-writestring)
 *  [How to write go code](https://golang.org/doc/code.html)
 *  [Git reset vs checkout vs revert](https://www.atlassian.com/git/tutorials/resetting-checking-out-and-reverting)
+*  [Passing arguments with struct](https://stackoverflow.com/questions/26211954/how-do-i-pass-arguments-to-my-handler)

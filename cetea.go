@@ -6,41 +6,50 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
-	"golang.org/x/oauth2/google"
-
+	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
-type Welcome struct {
-	Name string
-	Time string
+type TemplateModel_Index struct {
+	BuildName string
+	BuildTime string
 }
 
 type AuthorizationStruct struct {
 	Code string
 }
 
+var (
+	buildName  = babble.NewBabbler().Babble()
+	buildTime  = time.Now().Format(time.Stamp)
+	logger     = log.New(os.Stdout, "[cetea] ", 0)
+	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
+	colorReset = string([]byte{27, 91, 48, 109})
+)
+
 func main() {
-	http.HandleFunc("/", mainhandler)
+	logger.Printf("Build: %s %s %s - %s \n", colorGreen, buildName, colorReset, buildTime)
+
+	handle_index(TemplateModel_Index{buildName, buildTime})
 	http.HandleFunc("/authorization", authorization)
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
 	}
 }
 
-func mainhandler(w http.ResponseWriter, r *http.Request) {
-	welcome := Welcome{"Anonymous", time.Now().Format(time.Stamp)}
-	if name := r.FormValue("name"); name != "" {
-		welcome.Name = name
-	}
-	templates := template.Must(template.ParseFiles("template/index.html"))
-	if err := templates.ExecuteTemplate(w, "index.html", welcome); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	// io.WriteString(w, "pong")
+func handle_index(model TemplateModel_Index) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		templates := template.Must(template.ParseFiles("template/index.html"))
+		if err := templates.ExecuteTemplate(w, "index.html", model); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
 }
 
 func authorization(w http.ResponseWriter, r *http.Request) {

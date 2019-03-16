@@ -128,6 +128,12 @@
         text-align: center;
         padding: 20px;
       }
+
+      #build-metadata {
+        font-size: 10pt;
+        color: grey;
+        padding-left: 10px;
+      }
     </style>
     <div>
       <div id="topbar">
@@ -175,6 +181,18 @@
           placeholder="search"
           type="text" name="q" value="" size="30"> -->
       </div>
+    </div>
+
+    <div id="build-metadata">
+      <h4>Build info</h4>
+      <ul>
+        <li>
+            Build name: {{.BuildName}}
+        </li>
+        <li>
+            Build time: {{.BuildTime}}
+        </li>
+      </ul>
     </div>
   </body>
 </html>
