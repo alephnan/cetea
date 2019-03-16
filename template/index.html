@@ -6,9 +6,79 @@
     <title>Cetea</title>
   </head>
   <body>
-    <p>
-      Hello world
-      {{.Name}}, it is {{.Time}}
-    </p>
+    <style>
+      body {
+        font-family: Verdana, Geneva, sans-serif;
+      }
+      #topbar {
+        clear: left;
+        background-color: #ff6600;
+        overflow: auto;
+        padding: .5em 20px;
+        font-size: 14pt;
+      }
+      #topbar .topbarlink.selectedlink {
+        color: white;
+      }
+      #content {
+        background-color: #f6f6ef;
+      }
+      #main {
+        background-color: #f6f6ef;
+        padding: 20px;
+      }
+      #project {
+        font-size: 14pt;
+      }
+      #projectlabel {
+        color: #828282;
+      }
+      #projectid {
+        font-size: 10pt;
+        color: #828282;
+      }
+      #projectmetadata {
+        font-size: 9pt;
+        color: #828282;
+        padding: 10px;
+      }
+      input {
+        font-size: 18px;
+      }
+      #footer {
+        border-top: 2px solid #ff6600;
+        text-align: center;
+        padding: 20px;
+      }
+    </style>
+    <div>
+      <div id="topbar">
+        <span class="topbarlink">incidents | </span>
+        <span class="topbarlink selectedlink">activity</span> |
+        <span class="topbarlink">projects</span>
+        <span style="float:right">Login</span>
+      </div>
+      <div id="main">
+        <div id="project">
+          <span id="projectlabel">project:</span>
+          my-first-project
+          <span id="projectid">( uplifted-scout-234505 )</span>
+        </div>
+        <div id="projectmetadata">
+          <span id="organization">org: google.com</span> |
+          <span>IAM</span> |
+          <span>quota</span> |
+          <span>service accounts</span> |
+          <span>credentials</span> |
+          <span>APIS</span> |
+          <span>settings</span>
+        </div>
+      </div>
+      <div id="footer">
+        <input
+          placeholder="search"
+          type="text" name="q" value="" size="30">
+      </div>
+    </div>
   </body>
 </html>
