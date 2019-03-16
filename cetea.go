@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
+
+	"golang.org/x/oauth2/google"
+
+	"golang.org/x/oauth2"
 )
 
 type Welcome struct {
@@ -51,16 +56,35 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 	var auth AuthorizationStruct
 	err := json.NewDecoder(r.Body).Decode(&auth)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 	fmt.Println(auth.Code)
 
-	data, err := json.Marshal(auth)
+	file, err := ioutil.ReadFile("./config/client_secret.json")
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	conf, err := google.ConfigFromJSON(file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
-	io.WriteString(w, string(data))
+	token, err := conf.Exchange(oauth2.NoContext, auth.Code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	if token == nil {
+		http.Error(w, "No token response received", http.StatusForbidden)
+	}
+
+	response, err := json.Marshal(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	io.WriteString(w, string(response))
 }

@@ -1,7 +1,9 @@
-#/cetea/Dockerfile
+#!/bin/bash
 
 FROM "golang:alpine" AS build-env
 WORKDIR /go/src
+RUN apk add --no-cache git
+RUN go get -v golang.org/x/oauth2/...
 ADD . /go/src/app
 RUN cd /go/src/app && go build -o cetea
 

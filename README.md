@@ -1,4 +1,13 @@
+### Known issues
 
+#### REDIRECT_URI
+The Golang client expects a REDIRECT_URI, even though the
+one-time Server auth flow involves a JS client retrieving auth, forwarding it
+back to server, then the server simply does an exchange for access token
+(and hence no REDIRECT_URI needed). The client credentials may not even need
+to have such a REDIRECT_URI defined, but to make the Go client happy,
+specify REDIRECT_URI as the Authorized JS origin defined in the client
+credentials in GCP.
 
 ### Git
 
