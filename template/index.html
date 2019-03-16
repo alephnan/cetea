@@ -2,8 +2,9 @@
 <html>
   <head>
     <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Cetea</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   </head>
   <body>
     <style>
@@ -25,6 +26,38 @@
       }
       #main {
         background-color: #f6f6ef;
+        display: -webkit-flex;
+        display: flex;
+      }
+      #sidenav {
+        -webkit-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        flex: 0 0 50px;
+        background-color: #333333;
+        color: #adadad;
+        text-align: center;
+      }
+      #sidenav ul {
+        padding: 0;
+        list-style: none;
+      }
+      #sidenav ul li .material-icons {
+        padding: 5px;
+        font-size: 36px;
+      }
+      #menu {
+        -webkit-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        flex: 0 0 200px;
+        background-color: #252526;
+        color: #cccccc;
+      }
+      #content {
+        -webkit-flex: 3;
+        -ms-flex: 3;
+        flex: 3;
         padding: 20px;
       }
       #project {
@@ -42,6 +75,13 @@
         color: #828282;
         padding: 10px;
       }
+      #orgline {
+        font-size: 9pt;
+        color: #828282;
+      }
+      #organization {
+        color: black;
+      }
       input {
         font-size: 18px;
       }
@@ -55,29 +95,47 @@
       <div id="topbar">
         <span class="topbarlink">incidents | </span>
         <span class="topbarlink selectedlink">activity</span> |
-        <span class="topbarlink">projects</span>
+        <span class="topbarlink">projects</span> |
+        <span class="topbarlink">billing</span>
         <span style="float:right">Login</span>
       </div>
       <div id="main">
-        <div id="project">
-          <span id="projectlabel">project:</span>
-          my-first-project
-          <span id="projectid">( uplifted-scout-234505 )</span>
-        </div>
-        <div id="projectmetadata">
-          <span id="organization">org: google.com</span> |
-          <span>IAM</span> |
-          <span>quota</span> |
-          <span>service accounts</span> |
-          <span>credentials</span> |
-          <span>APIS</span> |
-          <span>settings</span>
+        <nav id="sidenav">
+          <ul>
+            <li><i class="material-icons md-36" title="Search">search</i></li>
+            <li><i class="material-icons md-36" title="My cloud">home</i></li>
+            <li><i class="material-icons md-36" title="Products">apps</i></li>
+            <li><i class="material-icons md-36" title="Shortcuts">keyboard</i></li>
+            <li><i class="material-icons md-36" title="Keys">vpn_key</i></li>
+          </ul>
+        </nav>
+        <nav id="menu">
+          <ul>
+            App Engine
+            Kubernetes
+          </ul>
+        </nav>
+        <div id="content">
+          <div id="orgline">organization: <span id="organization">google.com</span></div> 
+          <div id="project">
+            <span id="projectlabel">project:</span>
+            <span id="projectname">my-first-project</span>
+            <span id="projectid">( uplifted-scout-234505 )</span>
+          </div>
+          <div id="projectmetadata">
+            <span>IAM</span> |
+            <span>quota</span> |
+            <span>service accounts</span> |
+            <span>credentials</span> |
+            <span>APIS</span> |
+            <span>settings</span>
+          </div>
         </div>
       </div>
       <div id="footer">
-        <input
+        <!-- <input
           placeholder="search"
-          type="text" name="q" value="" size="30">
+          type="text" name="q" value="" size="30"> -->
       </div>
     </div>
   </body>
