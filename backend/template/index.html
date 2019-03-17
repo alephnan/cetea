@@ -11,20 +11,30 @@
     <script>
       function initoauth() {
         gapi.load('auth2', function() {
-          auth2 = gapi.auth2.init({
+          const options = {
             client_id: '247441366771-vj4rba3h6qd9fhmu18q2e3vek03lvdh2.apps.googleusercontent.com',
             // Scopes to request in addition to 'profile' and 'email'
             //scope: 'additional_scope'
-          });
+          };
+          auth2 = gapi.auth2.init(options);
         });
       }
       $(document).ready(() => {
         $('#login').click(function() {
+          // https://developers.google.com/identity/sign-in/web/reference#gapiauth2offlineaccessoptions
+          // const prompt = "select_account";
+          const prompt = "consent;"
           auth2.grantOfflineAccess().then(response => {
             if(!response.code) {
               console.log("Error.")
               return;
             }
+
+            // https://developers.google.com/identity/sign-in/web/reference#googleusergetid
+            const googleUser = auth2.currentUser.get();
+
+            console.log("Verifying with backend.");
+            const {id_token} = googleUser.getAuthResponse();
             fetch("http://localhost:8080/authorization", {
                 method: "POST",
                 cache: "no-cache",
@@ -34,11 +44,24 @@
                   "X-Requested-With": "XMLHttpRequest"
                 },
                 body: JSON.stringify({
-                  "code": response.code
+                  "code": response.code,
+                  // TODO: verify id_token on server
+                  "id_token": id_token
                 }),
             }).then(response => {
               console.log(response.json());
-            })
+              // TODO: update verifying state.
+            });
+
+            const profile = googleUser.getBasicProfile();
+            const email = profile.getEmail();
+            // BasicProfile.getId()
+            // BasicProfile.getName()
+            // BasicProfile.getGivenName()
+            // BasicProfile.getFamilyName()
+            // BasicProfile.getImageUrl()
+            // BasicProfile.getEmail();
+            document.getElementById("login").innerText = email + " ( verifying )";
           });
         });
       });
