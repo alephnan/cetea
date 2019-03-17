@@ -100,6 +100,9 @@ $ git commit --amend
 $ git reset HEAD~1 # unstage files from previous unpushed commit
 ```
 
+Reverting history:
+https://stackoverflow.com/questions/4372435/how-can-i-rollback-a-github-repository-to-a-specific-commit
+
 ### Golang
 ```
 $ cd $GOPATH/src/github.com/alephnan/cetea

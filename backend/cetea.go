@@ -19,6 +19,7 @@ import (
 type TemplateModel_Index struct {
 	BuildName string
 	BuildTime string
+	ClientId  string
 }
 
 type AuthorizationStruct struct {
@@ -33,13 +34,25 @@ var (
 	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
 	colorReset = string([]byte{27, 91, 48, 109})
 
+	googleAuth            *oauth2.Config
 	googleIdTokenVerifier = verifier.Verifier{}
+	idTokenAudience       []string
 )
 
 func main() {
 	logger.Printf("Build: %s %s %s - %s \n", colorGreen, buildName, colorReset, buildTime)
 
-	handle_index(TemplateModel_Index{buildName, buildTime})
+	file, err := ioutil.ReadFile("./config/client_secret.json")
+	if err != nil {
+		panic(err)
+	}
+	googleAuth, err = google.ConfigFromJSON(file)
+	if err != nil {
+		panic(err)
+	}
+	idTokenAudience = []string{googleAuth.ClientID}
+
+	handle_index(TemplateModel_Index{buildName, buildTime, googleAuth.ClientID})
 	http.HandleFunc("/authorization", authorization)
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
@@ -78,19 +91,7 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: This can be read once across all requests
-	file, err := ioutil.ReadFile("./config/client_secret.json")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-	conf, err := google.ConfigFromJSON(file)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	token, err := conf.Exchange(oauth2.NoContext, auth.Code)
+	token, err := googleAuth.Exchange(oauth2.NoContext, auth.Code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
@@ -109,10 +110,7 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 
 func verifyIdToken(idToken string) (*verifier.ClaimSet, error) {
 	logger.Printf("Verifying id_token: " + idToken)
-	aud := "247441366771-vj4rba3h6qd9fhmu18q2e3vek03lvdh2.apps.googleusercontent.com"
-	err := googleIdTokenVerifier.VerifyIDToken(idToken, []string{
-		aud,
-	})
+	err := googleIdTokenVerifier.VerifyIDToken(idToken, idTokenAudience)
 	if err != nil {
 		logger.Printf("Error verifying id_token.")
 		return nil, err
