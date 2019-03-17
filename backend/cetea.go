@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -11,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	verifier "github.com/alephnan/google-auth-id-token-verifier"
 	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -22,7 +22,8 @@ type TemplateModel_Index struct {
 }
 
 type AuthorizationStruct struct {
-	Code string
+	Code     string
+	Id_Token string
 }
 
 var (
@@ -31,6 +32,8 @@ var (
 	logger     = log.New(os.Stdout, "[cetea] ", 0)
 	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
 	colorReset = string([]byte{27, 91, 48, 109})
+
+	googleIdTokenVerifier = verifier.Verifier{}
 )
 
 func main() {
@@ -68,8 +71,14 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-	fmt.Println(auth.Code)
 
+	_, err = verifyIdToken(auth.Id_Token)
+	if err != nil {
+		http.Error(w, "Cannot verify id_token JWT", http.StatusForbidden)
+		return
+	}
+
+	// TODO: This can be read once across all requests
 	file, err := ioutil.ReadFile("./config/client_secret.json")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
@@ -96,4 +105,21 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	io.WriteString(w, string(response))
+}
+
+func verifyIdToken(idToken string) (*verifier.ClaimSet, error) {
+	logger.Printf("Verifying id_token: " + idToken)
+	aud := "247441366771-vj4rba3h6qd9fhmu18q2e3vek03lvdh2.apps.googleusercontent.com"
+	err := googleIdTokenVerifier.VerifyIDToken(idToken, []string{
+		aud,
+	})
+	if err != nil {
+		logger.Printf("Error verifying id_token.")
+		return nil, err
+	}
+	claims, err := verifier.Decode(idToken)
+	if err != nil {
+		logger.Print("Error decoding id_token.")
+	}
+	return claims, err
 }
