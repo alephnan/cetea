@@ -9,20 +9,77 @@ to have such a REDIRECT_URI defined, but to make the Go client happy,
 specify REDIRECT_URI as the Authorized JS origin defined in the client
 credentials in GCP.
 
-### Tools
+### Dev guide
 
-#### Gin
+#### Mac
 
-https://github.com/codegangsta/gin
+1. Install docker and docker-compose
 
-Gin watches for changes to .go in the source directory and rebuilds.
-It is a proxy server which redirects traffic to the app's port.
+2. Brew
+
+    ```
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    ```
+
+3. NGINX
+
+    ```
+    brew install nginx
+    ```
+
+4. Install watch-rebuild tool
+
+    https://github.com/codegangsta/gin
+
+    Gin watches for changes to .go in the source directory and rebuilds.
+    It is a proxy server which redirects traffic to the app's port.
+
+    ```
+    go get github.com/codegangsta/gin
+    ```
+
+#### GCP
+
+1. Create a 'Web Application' client credential in Google Cloud Console.
+   Whilist http://localhost:8080 and http://localhost:8081 as valid JS
+   origins.
+
+2. Download client secret json and store in backend/config/client_secret.json
+
+#### Run
+
+##### Manual with
+1. Start NGINX
+
+    ```
+    $ sudo nginx -t -c $GOPATH/src/github.com/alephnan/cetea/nginx/nginx.conf
+    $ sudo nginx -c $GOPATH/src/github.com/alephnan/cetea/nginx/nginx.conf
+    ```
+
+2. Run watch
+
+    ```
+    $ gin -a 8081 --path . --immediate
+    ```
+
+3. Stop NGINX
+    ```
+    $ sudo nginx -s stop
+    ```
+
+##### Without NGINX
 
 ```
-go get github.com/codegangsta/gin
-gin -a 8080 --path . --immediate
+$ gin -a 8080 --path . --immediate
 ```
 
+#### Docker
+
+```
+$ cd $GOPATH/src/github.com/alephnan/cetea
+$ docker-compose up --build
+$ docker-compose down
+```
 ### Git
 
 ```
@@ -40,6 +97,7 @@ $ git add <file> # stage file
 $ git reset <file> # unstage file
 $ git commit -m "message"
 $ git commit --amend
+$ git reset HEAD~1 # unstage files from previous unpushed commit
 ```
 
 ### Golang
@@ -81,15 +139,30 @@ $ docker run -p 8081:8080 -ti cetea
 ```
 $ vim ~/bashrc
 $ source ~/.bashrc
-$ export $GOPATH=~/go_workspace
-$ export $GOBIN=$GOPATH/bin
 ```
 
 ```
-$ ps ax | grep java
+$ history | grep cetea
+$ ps ax | grep cetea
 $ top
-$ netstat -an | grep 80
+$ netstat -an | grep 8080
 ```
+
+### Regex
+
+All lines consisting of a single Alphabetic character:
+
+`^[A-Z]{1}$`
+
+All lines consisting of a 1-10 Alphabetic character:
+
+`^[A-Z]{1,10}$`
+
+All tokens surrounded by parenthesis
+
+`\((*)\)`
+
+
 ### Useful links
 
 *  [Deploying Go web app on GCP](https://medium.com/martinomburajr/building-a-go-web-app-from-scratch-to-deploying-on-google-cloud-part-0-intro-a6bf26972ce5)

@@ -1,0 +1,14 @@
+version: '3'
+services:
+  ingress:
+    build: ./nginx
+    tty: true
+    links:
+      - application
+    ports:
+      - "8080:8080"
+  application:
+    build: ./backend
+    tty: true
+    expose:
+      - 8081
