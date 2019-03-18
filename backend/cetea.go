@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	verifier "github.com/alephnan/google-auth-id-token-verifier"
@@ -28,8 +30,10 @@ type AuthorizationStruct struct {
 }
 
 var (
-	buildName  = babble.NewBabbler().Babble()
-	buildTime  = time.Now().Format(time.Stamp)
+	buildName   = babble.NewBabbler().Babble()
+	buildTime   = time.Now().Format(time.Stamp)
+	defaultPort = 8080
+
 	logger     = log.New(os.Stdout, "[cetea] ", 0)
 	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
 	colorReset = string([]byte{27, 91, 48, 109})
@@ -41,6 +45,11 @@ var (
 
 func main() {
 	logger.Printf("Build: %s %s %s - %s \n", colorGreen, buildName, colorReset, buildTime)
+
+	port := flag.Int("port", defaultPort, "port to listen on")
+	flag.Parse()
+	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(*port), colorReset)
+	addr := ":" + strconv.Itoa(*port)
 
 	file, err := ioutil.ReadFile("./config/client_secret.json")
 	if err != nil {
@@ -54,7 +63,7 @@ func main() {
 
 	handle_index(TemplateModel_Index{buildName, buildTime, googleAuth.ClientID})
 	http.HandleFunc("/authorization", authorization)
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		panic(err)
 	}
 }

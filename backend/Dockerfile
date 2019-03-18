@@ -19,5 +19,13 @@ COPY --from=build-env /go/src/app /app
 # generating build name.
 ADD utility/build_name_words /usr/share/dict/words
 
-EXPOSE 8080
-ENTRYPOINT "./cetea"
+# Docker is so dumb. This ARG 'port' resolves to empty string when declared
+# above...
+ARG port=8080
+ENV PORT=$port
+EXPOSE $port
+# https://github.com/moby/moby/issues/13877
+# TODO: Problem ENTRYPOINT /CMD pattern is NGINX does not receive kill signal
+# and container left dangling.
+ENTRYPOINT ["sh", "-c"]
+CMD ["./cetea --port $PORT"]

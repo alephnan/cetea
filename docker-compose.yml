@@ -1,14 +1,19 @@
 version: '3'
 services:
   ingress:
-    build: ./nginx
+    build:
+      context: ./nginx
+      args:
+        port: 8020
+        port_app: 1234
     tty: true
     links:
       - application
     ports:
-      - "8080:8080"
+      - "8080:8020"
   application:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        port: 1234
     tty: true
-    expose:
-      - 8081
