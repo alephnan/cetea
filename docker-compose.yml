@@ -4,16 +4,16 @@ services:
     build:
       context: ./nginx
       args:
-        port: 8020
-        port_app: 1234
+        port: ${PORT_NGINX}
+        port_app: ${PORT_APP}
     tty: true
     links:
       - application
     ports:
-      - "8080:8020"
+      - "${PORT_INGRESS}:${PORT_NGINX}"
   application:
     build:
       context: ./backend
       args:
-        port: 1234
+        port: ${PORT_APP}
     tty: true
