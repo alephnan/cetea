@@ -187,11 +187,11 @@
         cursor: pointer;
         box-shadow: 1px 4px 5px 1px rgba(0,0,0,0.1);
       }
-      #app-button {
+      .material-icons.topnav-button {
         color: rgb(95, 99, 104);
         padding: 8px;
       }
-      #app-button:hover {
+      .material-icons.topnav-button:hover {
         background-color: #ebecec;
         border-radius: 50%;
         cursor: pointer;
@@ -350,12 +350,65 @@
         padding-left: 10px;
         border-top: 1px solid rgb(235, 235, 235);
       }
+
+      /* Tooltip */
+			.popover {
+				position: absolute;
+				display: none;
+				width: 250px;
+				background-color: white;
+				border: 1px solid rgb(235, 235, 235);
+				border-radius: 3px;
+				box-shadow: 0 5px 10px rgba(0,0,0,.2);
+				-webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+			}
+			.popover .popover-content {
+				padding: 10px;
+			}
+			.popover .arrow {
+				border-style: solid;
+				border-color: transparent;
+				border-top-color: rgb(235, 235, 235);
+				border-width: 11px;
+				border-bottom-width: 0;
+				bottom: -11px;
+				color: #333;
+				height: 0;
+				margin-left: -11px;
+				position: absolute;
+				width: 0;
+			}
+			.popover .arrow:after {
+				content: " ";
+				bottom: 1px;
+				margin-left: -10px;
+				border-color: transparent;
+				border-style: solid;
+				border-width: 10px;
+				border-bottom-width: 0;
+				border-top-color: #ffe;
+				position: absolute;
+				display: block;
+				width: 0;
+				height: 0;
+			}
+			.tip {
+				text-decoration: none;
+        color: rgb(43, 125, 233);
+				cursor: pointer;
+			}
+      .tip:hover {
+        text-decoration: underline;
+      }
+      /* End tooltip */
     </style>
     <div id="header">
       <div id="top-bar">
         <div id="top-bar-spacer"></div>
         <div id="top-bar-right">
-          <i class="material-icons" id="app-button">apps</i>
+          <i class="material-icons topnav-button" title="Search">search</i>
+          <i class="material-icons topnav-button" title="Dark mode">brightness_4</i>
+          <i class="material-icons topnav-button" title="Products">apps</i>
           <a id="login-button">Sign in</a>
         </div>
       </div>
@@ -386,8 +439,28 @@
           <div id="sidenav-projectlist-container" class="hidden">
             <ul id="sidenav-projectlist">
               <!-- TODO: handle too long name. truncate, use ellipsis. -->
-              <li><a href="">theon56k</a></li>
-              <li><a href="">domainparking</a></li>
+              <li>
+                <span class="tip" onmouseover="return vanillaTip.click(this);"  onmouseout="return vanillaTip.hide()">tooltip</span>
+                <div class="popover top">
+                  <div class="arrow"></div>
+                  <div class="popover-content">
+                    organization: Google
+                    project_name: abc
+                    project_id: gfjfj
+                    project_number: jgkg
+                    created on: jghgfg
+                  </div>
+                </div>
+              </li>
+              <li>
+                <span class="tip" onmouseover="return vanillaTip.click(this);"  onmouseout="return vanillaTip.hide()">Theon56k</span>
+                <div class="popover top">
+                  <div class="arrow"></div>
+                  <div class="popover-content">
+                    ABCfkjfgkfgjkgjgf
+                  </div>
+                </div>
+              </li>
               <li><a href="">goolf</a></li>
               <li><a href="">appengine</a></li>
               <li><a href="">hyperapp</a></li>
