@@ -13,21 +13,28 @@ credentials in GCP.
 
 #### Mac
 
-1. Install docker and docker-compose
+1. Add to ~/.bash_profile
 
-2. Brew
+    https://stackoverflow.com/questions/7780030/how-to-fix-terminal-not-loading-bashrc-on-os-x-lion
+    ```
+    [[ -s ~/.bashrc ]] && source ~/.bashrc
+    ```
+
+2. Install docker and docker-compose
+
+3. Brew
 
     ```
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     ```
 
-3. NGINX
+4. NGINX
 
     ```
     brew install nginx
     ```
 
-4. Install watch-rebuild tool
+5. Install watch-rebuild tool
 
     https://github.com/codegangsta/gin
 
@@ -174,3 +181,4 @@ All tokens surrounded by parenthesis
 *  [How to write go code](https://golang.org/doc/code.html)
 *  [Git reset vs checkout vs revert](https://www.atlassian.com/git/tutorials/resetting-checking-out-and-reverting)
 *  [Passing arguments with struct](https://stackoverflow.com/questions/26211954/how-do-i-pass-arguments-to-my-handler)
+*  [Flexbox](https://www.quackit.com/html/templates/css_flexbox_templates.cfm)
