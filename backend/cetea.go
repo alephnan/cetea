@@ -71,6 +71,9 @@ func main() {
 	idTokenAudience = []string{googleAuth.ClientID}
 
 	handle_index(TemplateModel_Index{buildName, buildTime, googleAuth.ClientID})
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	http.HandleFunc("/authorization", authorization)
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		panic(err)
