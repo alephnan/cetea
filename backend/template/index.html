@@ -49,8 +49,27 @@
                   "id_token": id_token
                 }),
             }).then(response => {
-              console.log(response.json());
-              // TODO: update verifying state.
+              response.json().then(json => {
+                const projectNames = json.projects;
+                const newUl = document.createElement('ul');
+                newUl.id = "sidenav-projectlist";
+                for(let i = 0 ; i < projectNames.length; i++) {
+                  const item = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.setAttribute("href", "")
+                  a.appendChild(document.createTextNode(projectNames[i]));
+                  item.appendChild(a);
+                  // https://coderwall.com/p/o9ws2g/why-you-should-always-append-dom-elements-using-documentfragments
+                  newUl.appendChild(item);
+                }
+                const frag = document.createDocumentFragment();
+                frag.appendChild(newUl);
+                const ul = document.getElementById("sidenav-projectlist");
+                ul.parentNode.replaceChild(frag, ul);
+
+                document.getElementById('sidenav').classList.remove("hidden");
+              });
+              // TODO: update login "verifying" state.
             });
 
             const profile = googleUser.getBasicProfile();
@@ -123,6 +142,9 @@
         display: -webkit-flex;
         display: flex;
         flex: 1;
+      }
+      #sidenav.hidden {
+        display: none;
       }
       #sidenav {
         order: 1;
@@ -311,7 +333,7 @@
       </div>
     </div>
     <div id="main">
-      <div id="sidenav">
+      <div id="sidenav" class="hidden">
         <div id="sidenav-header">
           <div id="sidenav-header-title">Projects</div>
           <div id="sidenav-header-button">

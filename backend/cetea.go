@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"html/template"
@@ -16,6 +17,8 @@ import (
 	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	crm "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/option"
 )
 
 type TemplateModel_Index struct {
@@ -27,6 +30,12 @@ type TemplateModel_Index struct {
 type AuthorizationStruct struct {
 	Code     string
 	Id_Token string
+}
+
+// TODO: populate more fields
+// TODO: Support orgs and folders.
+type AuthorizationResponse struct {
+	Projects []string `json:"projects"`
 }
 
 var (
@@ -109,7 +118,22 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No token response received", http.StatusForbidden)
 	}
 
-	response, err := json.Marshal(token)
+	ctx := context.Background()
+	crmService, err := crm.NewService(ctx, option.WithTokenSource(googleAuth.TokenSource(ctx, token)))
+	projectsResponse, err := crmService.Projects.List().Do()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	projects := projectsResponse.Projects
+	// TODO: handle non 200 HTTP responses?
+	// TODO: handle empty project list
+	var projectNames = make([]string, len(projects))
+	for i := 0; i < len(projects); i++ {
+		projectNames[i] = projects[i].Name
+	}
+	responseStruct := AuthorizationResponse{Projects: projectNames}
+	response, err := json.Marshal(responseStruct)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
