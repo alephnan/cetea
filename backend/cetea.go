@@ -10,7 +10,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	verifier "github.com/alephnan/google-auth-id-token-verifier"
@@ -57,8 +59,6 @@ func main() {
 
 	port := flag.Int("port", defaultPort, "port to listen on")
 	flag.Parse()
-	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(*port), colorReset)
-	addr := ":" + strconv.Itoa(*port)
 
 	file, err := ioutil.ReadFile("./config/client_secret.json")
 	if err != nil {
@@ -70,14 +70,39 @@ func main() {
 	}
 	idTokenAudience = []string{googleAuth.ClientID}
 
-	handle_index(TemplateModel_Index{buildName, buildTime, googleAuth.ClientID})
+	server := startServerInBackground(*port)
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-stop
+	logger.Println()
+	logger.Println("Received signal", sig.String())
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := server.Shutdown(ctx); err != nil {
+		cancel()
+		logger.Println("Error shutting down.")
+	} else {
+		logger.Println("Graceful shutdown.")
+	}
+	logger.Println("Exiting.")
+}
+
+func startServerInBackground(port int) *http.Server {
+	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(port), colorReset)
+	addr := ":" + strconv.Itoa(port)
+	srv := &http.Server{Addr: addr}
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
-
+	handle_index(TemplateModel_Index{buildName, buildTime, googleAuth.ClientID})
 	http.HandleFunc("/authorization", authorization)
-	if err := http.ListenAndServe(addr, nil); err != nil {
-		panic(err)
-	}
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logger.Panic(err)
+			panic(err)
+		}
+	}()
+	return srv
 }
 
 func handle_index(model TemplateModel_Index) {
