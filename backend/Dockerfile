@@ -13,20 +13,18 @@ RUN cd /go/src/app && go build -o cetea
 
 # Lightweight Linux container
 FROM alpine
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk*
+RUN apk update && apk add ca-certificates && apk add bash && rm -rf /var/cache/apk*
 WORKDIR /app
 COPY --from=build-env /go/src/app /app
 # Alpine does not include dictionary of words, needed to
 # generating build name.
 ADD utility/build_name_words /usr/share/dict/words
 
+COPY startup.sh /usr/local/bin/startup.sh
+
 # Docker is so dumb. This ARG 'port' resolves to empty string when declared
 # above...
 ARG port=8080
 ENV PORT=$port
 EXPOSE $port
-# https://github.com/moby/moby/issues/13877
-# TODO: Problem ENTRYPOINT /CMD pattern is NGINX does not receive kill signal
-# and container left dangling.
-ENTRYPOINT ["sh", "-c"]
-CMD ["./cetea --port $PORT"]
+ENTRYPOINT ["sh", "-c", "./startup.sh"]
