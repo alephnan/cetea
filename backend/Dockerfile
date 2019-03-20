@@ -1,26 +1,18 @@
-#!/bin/bash
-
 FROM "golang:alpine" AS build-env
-WORKDIR /go/src
-RUN apk add --no-cache git
-RUN go get -v google.golang.org/api/cloudresourcemanager/v1
-RUN go get -v github.com/tjarratt/babble
-RUN go get -v github.com/alephnan/google-auth-id-token-verifier
-# TODO: evaluate if we can just get google oauth2
-RUN go get -v golang.org/x/oauth2/...
-ADD . /go/src/app
-RUN cd /go/src/app && go build -o cetea
+RUN apk add git
+COPY . /go/src/app
+WORKDIR /go/src/app
+RUN go get -d -v
+RUN go build -o cetea
 
 # Lightweight Linux container
 FROM alpine
 RUN apk update && apk add ca-certificates && apk add bash && rm -rf /var/cache/apk*
-WORKDIR /app
 COPY --from=build-env /go/src/app /app
+WORKDIR /app
 # Alpine does not include dictionary of words, needed to
 # generating build name.
-ADD utility/build_name_words /usr/share/dict/words
-
-COPY startup.sh /usr/local/bin/startup.sh
+RUN mkdir -p /usr/share/dict/ && mv utility/build_name_words /usr/share/dict/words
 
 # Docker is so dumb. This ARG 'port' resolves to empty string when declared
 # above...
