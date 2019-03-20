@@ -2,14 +2,13 @@ FROM "golang:alpine" AS build-env
 # 1. Static
 ENV GO111MODULE on
 WORKDIR /go/src/app
-# 2. Dependencies
+# 2. OS Dependencies should not change much between runs
 RUN apk add git
-# 3. Post dependency COPY
-# TODO: decouple changes from source vs dependencies.
-# cache invalidated when XOR changes, and
-# downstream build always redownload dependencies.
-COPY *.go go.mod /go/src/app/
-# 4. Dynamic
+# 3. Network fetch for go deps is expensive, cache as much as possible.
+COPY go.mod /go/src/app/
+RUN go mod download
+# 4. Not too bad to run every time, once deps downloaded.
+COPY *.go /go/src/app/
 RUN go build -o cetea .
 
 # # Lightweight Linux container
