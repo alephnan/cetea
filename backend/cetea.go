@@ -62,6 +62,7 @@ func main() {
 
 	file, err := ioutil.ReadFile("./config/client_secret.json")
 	if err != nil {
+		// TODO: Signal bash script and/or Docker host and get them to terminate.
 		panic(err)
 	}
 	googleAuth, err = google.ConfigFromJSON(file)
