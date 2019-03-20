@@ -3,8 +3,9 @@
 FROM "golang:alpine" AS build-env
 WORKDIR /go/src
 RUN apk add --no-cache git
-RUN go get github.com/tjarratt/babble
-RUN go get github.com/alephnan/google-auth-id-token-verifier
+RUN go get -v google.golang.org/api/cloudresourcemanager/v1
+RUN go get -v github.com/tjarratt/babble
+RUN go get -v github.com/alephnan/google-auth-id-token-verifier
 # TODO: evaluate if we can just get google oauth2
 RUN go get -v golang.org/x/oauth2/...
 ADD . /go/src/app
