@@ -17,16 +17,19 @@ FROM alpine
 WORKDIR /app
 # Alpine does not include dictionary of words, needed to
 # generating build name.
-RUN mkdir -p /usr/share/dict/
+RUN mkdir -p /usr/share/dict/ ./config ./static ./template
 # 1.5. *Mostly static*
 COPY utility/build_name_words /usr/share/dict/words
-COPY startup.sh config ./
+COPY startup.sh ./
+COPY config config
 
 #2. Dependencies
 RUN apk --no-cache add ca-certificates && apk --no-cache add bash
 
 # Frequently changes
-COPY static template ./
+COPY template template
+COPY static static
+
 
 # 3. Post dependency COPY
 COPY --from=build-env /go/src/app/cetea /app
