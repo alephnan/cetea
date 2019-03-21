@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   window.vanillaTip.init();
+	apiHealthCheck();
 
   const login = document.getElementById("login-button");
   login.onclick = () => {
@@ -18,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       console.log("Verifying with backend.");
       const {id_token} = googleUser.getAuthResponse();
-      fetch("http://localhost:8080/authorization", {
+      fetch("http://localhost:8080/api/authorization", {
           method: "POST",
           cache: "no-cache",
           credentials: "same-origin",
@@ -165,3 +166,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.vanillaTip = Tip();
 })();
+
+/**
+ * Pings API to check that it's up.
+ */
+function apiHealthCheck() {
+	fetch("http://localhost:8080/api/health",  {
+		method: "GET",
+		cache: "no-cache",
+		credentials: "same-origin",
+	}).then(response => {
+		// TODO: alert in the UI
+		console.log(response.json())
+	});
+}

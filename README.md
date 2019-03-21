@@ -1,3 +1,7 @@
+### TODO
+
+- prevent CORs to API
+
 ### Known issues
 
 #### REDIRECT_URI

@@ -13,8 +13,6 @@ http {
     listen ${PORT};
     
     location / {
-      # TODO: renable
-      # proxy_pass http://localhost;
       alias ${DIST_DIR};
       gzip_static on;
       # TODO: disable in production
@@ -22,6 +20,10 @@ http {
       # TODO: enable in production
       proxy_no_cache 1;
       proxy_cache_bypass 1;
+    }
+
+    location /api {
+      proxy_pass http://localhost;
     }
   }
 }

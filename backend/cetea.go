@@ -33,6 +33,9 @@ type AuthorizationStruct struct {
 	Id_Token string
 }
 
+type HealthResponse struct {
+}
+
 // TODO: populate more fields
 // TODO: Support orgs and folders.
 type AuthorizationResponse struct {
@@ -51,6 +54,8 @@ var (
 	googleAuth            *oauth2.Config
 	googleIdTokenVerifier = verifier.Verifier{}
 	idTokenAudience       []string
+
+	HEALTH_RESPONSE = HealthResponse{}
 )
 
 func main() {
@@ -92,7 +97,8 @@ func startServerInBackground(port int) *http.Server {
 	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(port), colorReset)
 	addr := ":" + strconv.Itoa(port)
 	srv := &http.Server{Addr: addr}
-	http.HandleFunc("/authorization", authorization)
+	http.HandleFunc("/api/health", health)
+	http.HandleFunc("/api/authorization", authorization)
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			logger.Panic(err)
@@ -100,6 +106,13 @@ func startServerInBackground(port int) *http.Server {
 		}
 	}()
 	return srv
+}
+
+func health(w http.ResponseWriter, r *http.Request) {
+	// TODO: this should be refactored into middleware / interceptor
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(HEALTH_RESPONSE)
 }
 
 func authorization(w http.ResponseWriter, r *http.Request) {
