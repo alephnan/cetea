@@ -9,4 +9,6 @@ new Vue({
   router,
   store,
   render: h => h(App)
-}).$mount("#app");
+})
+// TODO: undisable Vue mount
+// }).$mount("#app");
