@@ -1,8 +1,9 @@
 FROM node:lts-alpine
 
 WORKDIR /app
-COPY package.json .
-COPY src/ src/
+RUN npm i -g @vue/cli 
+# TODO: exclude node_modules
+COPY . .
 
 # Outputs to dist directory
 RUN npm run build
