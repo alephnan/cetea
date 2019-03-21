@@ -11,9 +11,19 @@ services:
       - application
     ports:
       - "${PORT_INGRESS}:${PORT_NGINX}"
+    volumes:
+      - dist:/var/www/app/
+    depends_on:
+      - frontend-build
   application:
     build:
       context: ./backend
       args:
         port: ${PORT_APP}
     tty: true
+  frontend-build:
+    build: frontend
+    volumes:
+      - dist:/var/www/app/
+volumes:
+  dist: {}

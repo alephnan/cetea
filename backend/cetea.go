@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -93,9 +92,6 @@ func startServerInBackground(port int) *http.Server {
 	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(port), colorReset)
 	addr := ":" + strconv.Itoa(port)
 	srv := &http.Server{Addr: addr}
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
-	handle_index(TemplateModel_Index{buildName, buildTime, googleAuth.ClientID})
 	http.HandleFunc("/authorization", authorization)
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
@@ -104,15 +100,6 @@ func startServerInBackground(port int) *http.Server {
 		}
 	}()
 	return srv
-}
-
-func handle_index(model TemplateModel_Index) {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		templates := template.Must(template.ParseFiles("template/index.html"))
-		if err := templates.ExecuteTemplate(w, "index.html", model); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
 }
 
 func authorization(w http.ResponseWriter, r *http.Request) {

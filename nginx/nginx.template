@@ -1,6 +1,8 @@
 worker_processes 1;
 
 http {
+  include mime.types;
+
   upstream localhost {
     # These are references to our backend containers, facilitated by
     # Compose, as defined in docker-compose.yml   
@@ -11,7 +13,15 @@ http {
     listen ${PORT};
     
     location / {
-      proxy_pass http://localhost;
+      # TODO: renable
+      # proxy_pass http://localhost;
+      alias /var/www/app/;
+      gzip_static on;
+      # TODO: disable in production
+      autoindex on;
+      # TODO: enable in production
+      proxy_no_cache 1;
+      proxy_cache_bypass 1;
     }
   }
 }

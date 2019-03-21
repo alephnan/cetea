@@ -26,11 +26,6 @@ COPY config config
 #2. Dependencies
 RUN apk --no-cache add ca-certificates && apk --no-cache add bash
 
-# Frequently changes
-COPY template template
-COPY static static
-
-
 # 3. Post dependency COPY
 COPY --from=build-env /go/src/app/cetea /app
 
