@@ -6,13 +6,14 @@ services:
       args:
         port: ${PORT_NGINX}
         port_app: ${PORT_APP}
+        dist_dir: ${DIST_DIR}
     tty: true
     links:
       - application
     ports:
       - "${PORT_INGRESS}:${PORT_NGINX}"
     volumes:
-      - dist:/var/www/app/
+      - dist:${DIST_DIR}
     depends_on:
       - frontend-build
   application:
@@ -24,6 +25,6 @@ services:
   frontend-build:
     build: frontend
     volumes:
-      - dist:/var/www/app/
+      - dist:${DIST_DIR}
 volumes:
   dist: {}

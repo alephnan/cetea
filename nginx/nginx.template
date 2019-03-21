@@ -15,7 +15,7 @@ http {
     location / {
       # TODO: renable
       # proxy_pass http://localhost;
-      alias /var/www/app/;
+      alias ${DIST_DIR};
       gzip_static on;
       # TODO: disable in production
       autoindex on;

@@ -11,9 +11,11 @@ COPY nginx.template /etc/nginx/nginx.template
 # access the server via localhost:8080 on our host.
 ARG port=8080
 ARG port_app=8081
+ARG dist_dir
 ENV PORT=$port
 ENV PORT_APP=$port_app
+ENV DIST_DIR=$dist_dir
 EXPOSE $port
 
-RUN envsubst < /etc/nginx/nginx.template > /etc/nginx/nginx.conf
+RUN envsubst < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && rm /etc/nginx/nginx.template
 ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
