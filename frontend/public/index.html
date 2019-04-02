@@ -13,7 +13,7 @@
       function initoauth() {
         gapi.load('auth2', () => {
           const options = {
-            client_id: "247441366771-vj4rba3h6qd9fhmu18q2e3vek03lvdh2.apps.googleusercontent.com",
+            client_id: "<%= VUE_APP_GAPI_CLIENT_ID %>",
             // Scopes to request in addition to 'profile' and 'email'
             //scope: 'additional_scope'
           };

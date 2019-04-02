@@ -55,7 +55,11 @@ credentials in GCP.
    Whilist http://localhost:8080 and http://localhost:8081 as valid JS
    origins.
 
-2. Download client secret json and store in backend/config/client_secret.json
+2. Download client secret json
+
+3. Store client config in ./backend/config/client_secret.json
+
+4. Define $VUE_APP_GAPI_CLIENT_ID in ./frontend/.env.local
 
 #### Run
 
