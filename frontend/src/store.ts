@@ -23,7 +23,6 @@ export default new Vuex.Store({
       state.auth = payload;
     },
     showSidebar(state) {
-      (document as any).getElementById('sidenav').classList.remove("hidden");
       state.sidebar = true;
     },
     projects(state, payload) {
@@ -93,9 +92,6 @@ export default new Vuex.Store({
       payload.json().then((json: any) => {
         const projectNames = json.projects;
         commit("projects", projectNames);
-
-        (document as any).getElementById('sidenav-projectlist-spinner-container').classList.add("hidden");
-        (document as any).getElementById('sidenav-projectlist-container').classList.remove("hidden");
       });
     }
   }

@@ -58,7 +58,6 @@ export default class Main extends Vue {
   color: black;
 }
 
-
 /* Begin spinner https://loading.io/css/ */
 .lds-roller {
   display: inline-block;

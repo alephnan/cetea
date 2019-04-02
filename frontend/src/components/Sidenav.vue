@@ -1,5 +1,5 @@
 <template>
-  <div id="sidenav" class="sidenav hidden">
+  <div class="sidenav" v-if="showSidenav">
     <div class="sidenav-header">
       <div class="sidenav-header-title">Projects</div>
       <div class="sidenav-header-button">
@@ -11,11 +11,11 @@
       </div>
     </div>
     <div>
-      <div id="sidenav-projectlist-spinner-container" class="sidenav-projectlist-spinner-container">
+      <div v-if="showSpinner" class="sidenav-projectlist-spinner-container">
         <div class="sidenav-projectlist-spinner lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
       </div>
-      <div id="sidenav-projectlist-container" class="sidenav-projectlist-container hidden">
-        <ul id="sidenav-projectlist" class="sidenav-projectlist">
+      <div v-if="!showSpinner" class="sidenav-projectlist-container">
+        <ul class="sidenav-projectlist">
           <!-- TODO: handle too long name. truncate, use ellipsis. -->
           <li v-for="item in projectNames">
             <a href="">{{ item }}</a>
@@ -37,13 +37,18 @@ export default class Sidenav extends Vue {
   get projectNames() {
     return this.$store.state.projects || [];
   }
+
+  get showSpinner() {
+    return !this.$store.state.projects;
+  }
+
+  get showSidenav() {
+    return this.$store.state.sidebar;
+  }
 }
 </script>
 
 <style scoped lang="less">
-.sidenav.hidden {
-  display: none;
-}
 .sidenav {
   order: 1;
   flex: 0 0 200px;
@@ -71,12 +76,6 @@ export default class Sidenav extends Vue {
   align-content: center;
   justify-content: center;
   padding-top: 40px;
-}
-.sidenav-projectlist-spinner-container.hidden {
-  display: none;
-}
-.sidenav-projectlist-container.hidden {
-  display: none;
 }
 .sidenav-projectlist {
   list-style-type: none;
