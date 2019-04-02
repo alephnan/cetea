@@ -4,22 +4,14 @@
     <div id="main">
       <Sidenav />
       <div id="content">
-        <div id="orgline">organization: <span id="organization">google.com</span></div>
-        <div id="project">
-          <span id="projectlabel">project:</span>
-          <span id="projectname">my-first-project</span>
-          <span id="projectid">( uplifted-scout-234505 )</span>
-        </div>
+        <router-view />
       </div>
     </div>
     <BuildMetadata/>
-    <!--
     <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
     </div>
-    <router-view />
-    -->
   </div>
 </template>
 
@@ -51,7 +43,6 @@ export default class Home extends Vue {
   }
 }
 </script>
-
 
 <style lang="less">
 #app {
@@ -90,14 +81,4 @@ export default class Home extends Vue {
 #organization {
   color: black;
 }
-// #nav {
-//   padding: 30px;
-//   a {
-//     font-weight: bold;
-//     color: #2c3e50;
-//     &.router-link-exact-active {
-//       color: #42b983;
-//     }
-//   }
-// }
 </style>

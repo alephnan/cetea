@@ -1,6 +1,11 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
+  <div>
+    <div id="orgline">organization: <span id="organization">google.com</span></div>
+    <div id="project">
+      <span id="projectlabel">project:</span>
+      <span id="projectname">my-first-project</span>
+      <span id="projectid">( uplifted-scout-234505 )</span>
+    </div>
   </div>
 </template>
 
