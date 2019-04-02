@@ -26,7 +26,19 @@ import Main from "@/components/Main.vue"; // @ is an alias to /src
     Main,
   }
 })
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  beforeCreate() {
+     // Pings API to check that it's up.
+    fetch("http://localhost:8080/api/health",  {
+        method: "GET",
+        cache: "no-cache",
+        credentials: "same-origin",
+      }).then(response => {
+        // TODO: alert in the UI
+        console.log(response.json())
+      });
+  }
+}
 </script>
 
 

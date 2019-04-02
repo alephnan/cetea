@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   window.vanillaTip.init();
-	apiHealthCheck();
 });
-
 
 // https://github.com/nahojd/vanilla-tooltip
 (function() {
@@ -99,17 +97,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.vanillaTip = Tip();
 })();
-
-/**
- * Pings API to check that it's up.
- */
-function apiHealthCheck() {
-	fetch("http://localhost:8080/api/health",  {
-		method: "GET",
-		cache: "no-cache",
-		credentials: "same-origin",
-	}).then(response => {
-		// TODO: alert in the UI
-		console.log(response.json())
-	});
-}
