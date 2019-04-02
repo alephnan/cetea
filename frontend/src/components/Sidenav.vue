@@ -4,9 +4,7 @@
       <div class="sidenav-header-title">Projects</div>
       <div class="sidenav-header-button">
         <div class="button-container">
-          <button href="#" class="button">
-            New
-          </button>
+          <Button />
         </div>
       </div>
     </div>
@@ -31,10 +29,12 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Spinner from "@/components/Spinner.vue"; // @ is an alias to /src
+import Button from "@/components/Button.vue";
+import Spinner from "@/components/Spinner.vue";
 
 @Component({
   components: {
+    Button,
     Spinner
   }
 })
