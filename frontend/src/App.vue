@@ -1,7 +1,17 @@
 <template>
   <div id="app">
     <Header/>
-    <Main/>
+    <div id="main">
+      <Sidenav />
+      <div id="content">
+        <div id="orgline">organization: <span id="organization">google.com</span></div>
+        <div id="project">
+          <span id="projectlabel">project:</span>
+          <span id="projectname">my-first-project</span>
+          <span id="projectid">( uplifted-scout-234505 )</span>
+        </div>
+      </div>
+    </div>
     <BuildMetadata/>
     <!--
     <div id="nav">
@@ -15,15 +25,16 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import Header from "@/components/Header.vue"; // @ is an alias to /src
-import BuildMetadata from "@/components/BuildMetadata.vue"; // @ is an alias to /src
-import Main from "@/components/Main.vue"; // @ is an alias to /src
+ // @ is an alias to /src
+import BuildMetadata from "@/components/BuildMetadata.vue";
+import Header from "@/components/Header.vue";
+import Sidenav from "@/components/Sidenav.vue";
 
 @Component({
   components: {
     BuildMetadata,
     Header,
-    Main,
+    Sidenav,
   }
 })
 export default class Home extends Vue {
@@ -48,6 +59,36 @@ export default class Home extends Vue {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
+}
+#main {
+  display: -webkit-flex;
+  display: flex;
+  flex: 1;
+}
+#content {
+  flex: 1;
+  order: 2;
+  padding-left: 25px;
+  padding-right: 25px;
+  padding-top: 35px;
+  border-left: 1px solid rgb(235, 235, 235);
+}
+#project {
+  font-size: 14pt;
+}
+#projectlabel {
+  color: #828282;
+}
+#projectid {
+  font-size: 10pt;
+  color: #828282;
+}
+#orgline {
+  font-size: 9pt;
+  color: #828282;
+}
+#organization {
+  color: black;
 }
 // #nav {
 //   padding: 30px;
