@@ -7,7 +7,7 @@
         <i class="material-icons topnav-button" title="Search">search</i>
         <i class="material-icons topnav-button" title="Dark mode">brightness_4</i>
         <i class="material-icons topnav-button" title="Products">apps</i>
-        <a id="login-button">Sign in</a>
+        <Login/>
       </div>
     </div>
     <div id="second-bar">
@@ -19,6 +19,20 @@
     </div>
   </div>
 </template>
+
+
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import Login from "@/components/Login.vue";
+
+@Component({
+  components: {
+    Login
+  }
+})
+export default class Header extends Vue {
+}
+</script>
 
 <style scoped lang="less">
 #header {

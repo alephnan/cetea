@@ -13,6 +13,16 @@ to have such a REDIRECT_URI defined, but to make the Go client happy,
 specify REDIRECT_URI as the Authorized JS origin defined in the client
 credentials in GCP.
 
+### Succeeding docker-compose up
+
+Running multiple docker-compose up without first using docker-compose downq
+does wipe the named volume. Static assets from the previous build are used.
+
+One must run:
+```
+$ docker-compose down
+$ docker volume rm $VOLUME_NAME
+```
 ### Dev guide
 
 #### Mac
@@ -94,6 +104,11 @@ $ gin -a 8080 --path . --immediate
 $ cd $GOPATH/src/github.com/alephnan/cetea
 $ docker-compose up --build
 $ docker-compose down
+```
+
+Explore file
+```
+$ docker run --rm -i -v=postgres-data:/tmp/myvolume $IMAGE_ID cat /var/www/app/static/script.js
 ```
 ### Git
 
