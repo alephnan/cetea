@@ -12,7 +12,7 @@
     </div>
     <div>
       <div v-if="showSpinner" class="sidenav-projectlist-spinner-container">
-        <div class="sidenav-projectlist-spinner lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <Spinner/>
       </div>
       <div v-if="!showSpinner" class="sidenav-projectlist-container">
         <ul class="sidenav-projectlist">
@@ -31,8 +31,13 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import Spinner from "@/components/Spinner.vue"; // @ is an alias to /src
 
-@Component
+@Component({
+  components: {
+    Spinner
+  }
+})
 export default class Sidenav extends Vue {
   get projectNames() {
     return this.$store.state.projects || [];
