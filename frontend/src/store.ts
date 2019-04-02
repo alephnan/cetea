@@ -10,7 +10,8 @@ export default new Vuex.Store({
       state: AuthState.LoggedOut,
       email: null,
     },
-    sidebar: false
+    sidebar: false,
+    projects: null
   },
   mutations: {
     auth(state, payload) {
@@ -24,6 +25,9 @@ export default new Vuex.Store({
     showSidebar(state) {
       (document as any).getElementById('sidenav').classList.remove("hidden");
       state.sidebar = true;
+    },
+    projects(state, payload) {
+      state.projects = payload;
     }
   },
   actions: {
@@ -88,21 +92,7 @@ export default new Vuex.Store({
     handleVerificationResponse: ({commit}, payload) => {
       payload.json().then((json: any) => {
         const projectNames = json.projects;
-        const newUl = document.createElement('ul');
-        newUl.id = "sidenav-projectlist";
-        for(let i = 0 ; i < projectNames.length; i++) {
-          const item = document.createElement('li');
-          const a = document.createElement('a');
-          a.setAttribute("href", "")
-          a.appendChild(document.createTextNode(projectNames[i]));
-          item.appendChild(a);
-          // https://coderwall.com/p/o9ws2g/why-you-should-always-append-dom-elements-using-documentfragments
-          newUl.appendChild(item);
-        }
-        const frag = document.createDocumentFragment();
-        frag.appendChild(newUl);
-        const ul: any = document.getElementById("sidenav-projectlist");
-        ul.parentNode.replaceChild(frag, ul as any);
+        commit("projects", projectNames);
 
         (document as any).getElementById('sidenav-projectlist-spinner-container').classList.add("hidden");
         (document as any).getElementById('sidenav-projectlist-container').classList.remove("hidden");

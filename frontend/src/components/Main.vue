@@ -1,60 +1,6 @@
 <template>
   <div id="main">
-    <div id="sidenav" class="hidden">
-      <div id="sidenav-header">
-        <div id="sidenav-header-title">Projects</div>
-        <div id="sidenav-header-button">
-          <div class="button-container">
-            <button href="#" class="button" id="new-project">
-              New
-            </button>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div id="sidenav-projectlist-spinner-container">
-          <div id="sidenav-projectlist-spinner" class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-        </div>
-        <div id="sidenav-projectlist-container" class="hidden">
-          <ul id="sidenav-projectlist">
-            <!-- TODO: handle too long name. truncate, use ellipsis. -->
-            <li>
-              <span class="tip" onmouseover="return vanillaTip.click(this);"  onmouseout="return vanillaTip.hide()">tooltip</span>
-              <div class="popover top">
-                <div class="arrow"></div>
-                <div class="popover-content">
-                  organization: Google
-                  project_name: abc
-                  project_id: gfjfj
-                  project_number: jgkg
-                  created on: jghgfg
-                </div>
-              </div>
-            </li>
-            <li>
-              <span class="tip" onmouseover="return vanillaTip.click(this);"  onmouseout="return vanillaTip.hide()">Theon56k</span>
-              <div class="popover top">
-                <div class="arrow"></div>
-                <div class="popover-content">
-                  ABCfkjfgkfgjkgjgf
-                </div>
-              </div>
-            </li>
-            <li><a href="">goolf</a></li>
-            <li><a href="">appengine</a></li>
-            <li><a href="">hyperapp</a></li>
-            <li><a href="">himalayan</a></li>
-            <li><a href="">gradient</a></li>
-            <li><a href="">zamboni</a></li>
-            <li><a href="">parthenon</a></li>
-            <li><a href="">atlas</a></li>
-          </ul>
-          <a href="" id="show-more">
-            Show more
-          </a>
-        </div>
-      </div>
-    </div>
+    <Sidenav />
     <div id="content">
       <div id="orgline">organization: <span id="organization">google.com</span></div>
       <div id="project">
@@ -66,74 +12,24 @@
   </div>
 </template>
 
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import Sidenav from "@/components/Sidenav.vue"; // @ is an alias to /src
+
+@Component({
+  components: {
+    Sidenav,
+  }
+})
+export default class Main extends Vue {
+}
+</script>
+
 <style scoped lang="less">
 #main {
   display: -webkit-flex;
   display: flex;
   flex: 1;
-}
-#sidenav.hidden {
-  display: none;
-}
-#sidenav {
-  order: 1;
-  flex: 0 0 200px;
-  overflow: hidden;
-  padding-left: 25px;
-  padding-right: 25px;
-  padding-top: 35px;
-  background: url("http://thecodeplayer.com/uploads/media/geometry.png");
-}
-#sidenav-header {
-  display: flex;
-  justify-content: center;
-}
-#sidenav-header-title {
-  flex-grow: 99;
-  align-items: center;
-  display: flex;
-  font-weight: bold;
-}
-#sidenav-header-button {
-  flex: 1;
-}
-#sidenav-projectlist-spinner-container {
-  display: flex;
-  align-content: center;
-  justify-content: center;
-  padding-top: 40px;
-}
-#sidenav-projectlist-spinner-container.hidden {
-  display: none;
-}
-#sidenav-projectlist-container.hidden {
-  display: none;
-}
-#sidenav-projectlist {
-  list-style-type: none;
-  padding: 0px;
-}
-#sidenav-projectlist li {
-  margin-top: 8px;
-}
-#sidenav-projectlist a {
-  text-decoration: none;
-  font-weight: bold;
-}
-#sidenav-projectlist a:hover {
-  text-decoration: underline;
-}
-#sidenav-projectlist a:visited {
-  color: rgb(43, 125, 233);
-  text-decoration: underline;
-}
-#show-more {
-  font-size: 14px;
-  color: grey;
-  text-decoration: none;
-}
-#show-more:hover {
-  color: rgb(43, 125, 233);
 }
 
 #content {
