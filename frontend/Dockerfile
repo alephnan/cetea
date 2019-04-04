@@ -1,9 +1,10 @@
 FROM node:lts-alpine
 
 WORKDIR /app
-RUN npm i -g @vue/cli 
-# TODO: exclude node_modules
+# Worksaround: https://github.com/npm/npm/issues/20861
+RUN npm config set unsafe-perm true
 COPY . .
+RUN npm i
 
 # Outputs to dist directory
 RUN npm run build
