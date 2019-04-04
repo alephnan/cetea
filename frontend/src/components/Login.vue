@@ -15,6 +15,8 @@ export default class Login extends Vue {
   get msg () {
     const auth = this.$store.state.auth;
     switch(auth.state) {
+      case AuthState.Preparing:
+        return "Loading";
       case AuthState.LoggedOut:
         return "Sign in";
       case AuthState.LoggingIn:
@@ -25,6 +27,8 @@ export default class Login extends Vue {
         return auth.email;
       case AuthState.Error:
         return "Error";
+      default:
+        return "Unknown";
     }
   }
 }

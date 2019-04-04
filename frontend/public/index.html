@@ -7,20 +7,6 @@
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title>Cetea</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-    <script src="https://apis.google.com/js/client:platform.js?onload=initoauth" async defer></script>
-    <script>
-      function initoauth() {
-        gapi.load('auth2', () => {
-          const options = {
-            client_id: "<%= VUE_APP_GAPI_CLIENT_ID %>",
-            // Scopes to request in addition to 'profile' and 'email'
-            //scope: 'additional_scope'
-          };
-          auth2 = gapi.auth2.init(options);
-        });
-      }
-    </script>
     <script src="static/script.js"></script>
     <style>
       body {

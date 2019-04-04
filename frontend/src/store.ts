@@ -3,17 +3,21 @@ import Vuex from "vuex";
 import {AuthState} from "./enum";
 
 Vue.use(Vuex);
-
 export default new Vuex.Store({
   state: {
+    auth2: null,
     auth: {
-      state: AuthState.LoggedOut,
+      state: AuthState.Preparing,
       email: null,
     },
     sidebar: false,
     projects: null
   },
   mutations: {
+    loadedAuth2(state, payload) {
+      state.auth2 = payload;
+      state.auth.state = AuthState.LoggedOut;
+    },
     auth(state, payload) {
       if(!payload.email) {
         if(payload.state == AuthState.Verifying || payload.state == AuthState.Verified) {
@@ -30,19 +34,24 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    signin: ({commit, dispatch}, payload) => {
+    loadAuthClient: ({commit}, payload) => {
+      Vue.prototype.$getGapi().then((auth2: any) => {
+        commit("loadedAuth2", auth2)
+      })
+    },
+    signin: ({commit, dispatch, state}, payload) => {
       commit("auth", {state: AuthState.LoggingIn});
       // https://developers.google.com/identity/sign-in/web/reference#gapiauth2offlineaccessoptions
       // const prompt = "select_account";
       // const prompt = "consent;"
-      (window as any).auth2.grantOfflineAccess().then((response: any) => {
+      (state.auth2 as any).grantOfflineAccess().then((response: any) => {
         // Change state
         if(!response.code) {
           commit("auth", {state: AuthState.Error});
           console.log("Error.");
           return;
         }
-        const googleUser = (window as any).auth2.currentUser.get();
+        const googleUser = (state.auth2 as any).currentUser.get();
         const profile = googleUser.getBasicProfile();
         const email = profile.getEmail();
         // BasicProfile.getId()
@@ -64,7 +73,7 @@ export default new Vuex.Store({
 
       const response = payload;
       // https://developers.google.com/identity/sign-in/web/reference#googleusergetid
-      const googleUser = (window as any).auth2.currentUser.get();
+      const googleUser = (state.auth2 as any).currentUser.get();
       const {id_token} = googleUser.getAuthResponse();
       fetch("http://localhost:8080/api/authorization", {
           method: "POST",

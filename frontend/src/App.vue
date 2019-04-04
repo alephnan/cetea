@@ -41,6 +41,9 @@ export default class Home extends Vue {
         console.log(response.json())
       });
   }
+  mounted() {
+    this.$store.dispatch("loadAuthClient");
+  }
 }
 </script>
 
