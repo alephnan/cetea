@@ -1,20 +1,20 @@
 <template>
-  <a class="login-button" @click="login">{{msg}}</a>
+  <a class="login-button" @click="login">{{ msg }}</a>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import {AuthState} from "../enum";
+import { AuthState } from "../enum";
 
 @Component
 export default class Login extends Vue {
-  login () {
-    this.$store.dispatch("signin")
+  login() {
+    this.$store.dispatch("signin");
   }
 
-  get msg () {
+  get msg() {
     const auth = this.$store.state.auth;
-    switch(auth.state) {
+    switch (auth.state) {
       case AuthState.Preparing:
         return "Loading";
       case AuthState.LoggedOut:
@@ -23,7 +23,7 @@ export default class Login extends Vue {
         return "Logging in";
       case AuthState.Verifying:
         return auth.email + " ( Verifying ) ";
-      case AuthState.Verified: 
+      case AuthState.Verified:
         return auth.email;
       case AuthState.Error:
         return "Error";
@@ -48,11 +48,11 @@ export default class Login extends Vue {
   border-bottom-right-radius: 4px;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
-  font-family: "Google Sans",Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+  font-family: "Google Sans", Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
   margin-left: 10px;
 }
 .login-button:hover {
   cursor: pointer;
-  box-shadow: 1px 4px 5px 1px rgba(0,0,0,0.1);
+  box-shadow: 1px 4px 5px 1px rgba(0, 0, 0, 0.1);
 }
 </style>

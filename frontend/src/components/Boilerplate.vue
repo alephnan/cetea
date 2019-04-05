@@ -1,4 +1,5 @@
 <template>
+  <div></div>
 </template>
 
 <script lang="ts">
@@ -10,9 +11,7 @@ import Spinner from "@/components/Spinner.vue"; // @ is an alias to /src
     Spinner
   }
 })
-export default class Boilerplate extends Vue {
-}
+export default class Boilerplate extends Vue {}
 </script>
 
-<style scoped lang="less">
-</style>
+<style scoped lang="less"></style>

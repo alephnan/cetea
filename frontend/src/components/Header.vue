@@ -1,13 +1,14 @@
-
 <template>
   <div id="header">
     <div id="top-bar">
       <div id="top-bar-spacer"></div>
       <div id="top-bar-right">
         <i class="material-icons topnav-button" title="Search">search</i>
-        <i class="material-icons topnav-button" title="Dark mode">brightness_4</i>
+        <i class="material-icons topnav-button" title="Dark mode"
+          >brightness_4</i
+        >
         <i class="material-icons topnav-button" title="Products">apps</i>
-        <Login/>
+        <Login />
       </div>
     </div>
     <div id="second-bar">
@@ -29,8 +30,7 @@ import Login from "@/components/Login.vue";
     Login
   }
 })
-export default class Header extends Vue {
-}
+export default class Header extends Vue {}
 </script>
 
 <style scoped lang="less">
@@ -57,7 +57,7 @@ export default class Header extends Vue {
 
 #second-bar {
   display: none;
-} 
+}
 /*
 #second-bar ul {
   padding-left: 0px;
@@ -76,7 +76,6 @@ export default class Header extends Vue {
   font-family: Roboto, Arial, sans-serif;
 } */
 
-
 #login-button {
   padding-top: 9px;
   padding-bottom: 9px;
@@ -89,12 +88,12 @@ export default class Header extends Vue {
   border-bottom-right-radius: 4px;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
-  font-family: "Google Sans",Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+  font-family: "Google Sans", Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
   margin-left: 10px;
 }
 #login-button:hover {
   cursor: pointer;
-  box-shadow: 1px 4px 5px 1px rgba(0,0,0,0.1);
+  box-shadow: 1px 4px 5px 1px rgba(0, 0, 0, 0.1);
 }
 .material-icons.topnav-button {
   color: rgb(95, 99, 104);

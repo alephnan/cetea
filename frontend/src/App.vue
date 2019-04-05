@@ -1,13 +1,13 @@
 <template>
   <div id="app">
-    <Header/>
+    <Header />
     <div id="main">
       <Sidenav />
       <div id="content">
         <router-view />
       </div>
     </div>
-    <BuildMetadata/>
+    <BuildMetadata />
     <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
- // @ is an alias to /src
+// @ is an alias to /src
 import BuildMetadata from "@/components/BuildMetadata.vue";
 import Header from "@/components/Header.vue";
 import Sidenav from "@/components/Sidenav.vue";
@@ -26,20 +26,20 @@ import Sidenav from "@/components/Sidenav.vue";
   components: {
     BuildMetadata,
     Header,
-    Sidenav,
+    Sidenav
   }
 })
 export default class Home extends Vue {
   beforeCreate() {
-     // Pings API to check that it's up.
-    fetch("http://localhost:8080/api/health",  {
-        method: "GET",
-        cache: "no-cache",
-        credentials: "same-origin",
-      }).then(response => {
-        // TODO: alert in the UI
-        console.log(response.json())
-      });
+    // Pings API to check that it's up.
+    fetch("http://localhost:8080/api/health", {
+      method: "GET",
+      cache: "no-cache",
+      credentials: "same-origin"
+    }).then(response => {
+      // TODO: alert in the UI
+      console.log(response.json());
+    });
   }
   mounted() {
     this.$store.dispatch("loadAuthClient");
@@ -49,7 +49,7 @@ export default class Home extends Vue {
 
 <style lang="less">
 #app {
-  font-family:  Geneva, sans-serif;
+  font-family: Geneva, sans-serif;
   display: flex;
   min-height: 100vh;
   flex-direction: column;

@@ -10,12 +10,12 @@
     </div>
     <div>
       <div v-if="showSpinner" class="sidenav-projectlist-spinner-container">
-        <Spinner/>
+        <Spinner />
       </div>
       <div v-if="!showSpinner" class="sidenav-projectlist-container">
         <ul class="sidenav-projectlist">
           <!-- TODO: handle too long name. truncate, use ellipsis. -->
-          <li v-for="item in projectNames">
+          <li v-for="item in projectNames" :key="item">
             <a href="">{{ item }}</a>
           </li>
         </ul>

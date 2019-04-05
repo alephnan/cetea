@@ -3,10 +3,10 @@
     <h4>Build info</h4>
     <ul>
       <li>
-          Build name:
+        Build name:
       </li>
       <li>
-          Build time:
+        Build time:
       </li>
     </ul>
   </div>

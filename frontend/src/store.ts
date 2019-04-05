@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import {AuthState} from "./enum";
+import { AuthState } from "./enum";
 
 Vue.use(Vuex);
 export default new Vuex.Store({
@@ -8,7 +8,7 @@ export default new Vuex.Store({
     auth2: null,
     auth: {
       state: AuthState.Preparing,
-      email: null,
+      email: null
     },
     sidebar: false,
     projects: null
@@ -19,8 +19,11 @@ export default new Vuex.Store({
       state.auth.state = AuthState.LoggedOut;
     },
     auth(state, payload) {
-      if(!payload.email) {
-        if(payload.state == AuthState.Verifying || payload.state == AuthState.Verified) {
+      if (!payload.email) {
+        if (
+          payload.state == AuthState.Verifying ||
+          payload.state == AuthState.Verified
+        ) {
           // TODO: throw invalid state transition error.
         }
       }
@@ -34,20 +37,20 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    loadAuthClient: ({commit}, payload) => {
+    loadAuthClient: ({ commit }, payload) => {
       Vue.prototype.$getGapi().then((auth2: any) => {
-        commit("loadedAuth2", auth2)
-      })
+        commit("loadedAuth2", auth2);
+      });
     },
-    signin: ({commit, dispatch, state}, payload) => {
-      commit("auth", {state: AuthState.LoggingIn});
+    signin: ({ commit, dispatch, state }, payload) => {
+      commit("auth", { state: AuthState.LoggingIn });
       // https://developers.google.com/identity/sign-in/web/reference#gapiauth2offlineaccessoptions
       // const prompt = "select_account";
       // const prompt = "consent;"
       (state.auth2 as any).grantOfflineAccess().then((response: any) => {
         // Change state
-        if(!response.code) {
-          commit("auth", {state: AuthState.Error});
+        if (!response.code) {
+          commit("auth", { state: AuthState.Error });
           console.log("Error.");
           return;
         }
@@ -68,36 +71,36 @@ export default new Vuex.Store({
         dispatch("verify", response);
       });
     },
-    verify: ({commit, dispatch, state}, payload) => {
+    verify: ({ commit, dispatch, state }, payload) => {
       console.log("Verifying with backend.");
 
       const response = payload;
       // https://developers.google.com/identity/sign-in/web/reference#googleusergetid
       const googleUser = (state.auth2 as any).currentUser.get();
-      const {id_token} = googleUser.getAuthResponse();
+      const { id_token } = googleUser.getAuthResponse();
       fetch("http://localhost:8080/api/authorization", {
-          method: "POST",
-          cache: "no-cache",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest"
-          },
-          body: JSON.stringify({
-            "code": response.code,
-            // TODO: verify id_token on server
-            "id_token": id_token
-          })
+        method: "POST",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({
+          code: response.code,
+          // TODO: verify id_token on server
+          id_token: id_token
+        })
       }).then(response => {
         // TODO: Handle error response
         commit("auth", {
           state: AuthState.Verified,
           email: state.auth.email
         });
-        dispatch('handleVerificationResponse', response);
+        dispatch("handleVerificationResponse", response);
       });
     },
-    handleVerificationResponse: ({commit}, payload) => {
+    handleVerificationResponse: ({ commit }, payload) => {
       payload.json().then((json: any) => {
         const projectNames = json.projects;
         commit("projects", projectNames);

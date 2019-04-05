@@ -4,7 +4,7 @@ import router from "./router";
 import store from "./store";
 
 import GoogleSignin from "./plugins/google_signin";
-import {client_id} from "@/../config";
+import { client_id } from "@/../config";
 
 Vue.config.productionTip = false;
 
