@@ -153,6 +153,10 @@ func sign(w http.ResponseWriter, claims Claims) {
 		Name:    "token",
 		Value:   jwt,
 		Expires: expirationTime,
+		// prevents cookie from being read by JavaScript. Cookie will still
+		// be automatically attached to http requests. This has
+		// nothing to do with https vs http
+		HttpOnly: true,
 	})
 }
 
