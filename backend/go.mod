@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/alephnan/google-auth-id-token-verifier v0.0.0-20170311140316-2a5b89f28b7e
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/namsral/flag v1.7.4-pre
 	github.com/tjarratt/babble v0.0.0-20140317234543-2cf06e8d98b0
 	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914

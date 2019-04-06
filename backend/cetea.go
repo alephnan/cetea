@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	verifier "github.com/alephnan/google-auth-id-token-verifier"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/namsral/flag"
 	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
@@ -26,6 +28,11 @@ type TemplateModel_Index struct {
 	BuildName string
 	BuildTime string
 	ClientId  string
+}
+
+type Claims struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
 }
 
 type AuthorizationStruct struct {
@@ -56,6 +63,15 @@ var (
 	idTokenAudience       []string
 
 	HEALTH_RESPONSE = HealthResponse{}
+
+	users = map[string]string{
+		"user1": "password1",
+		"user2": "password2",
+	}
+
+	JWT_KEY                           = []byte("my_secret_key")
+	SESSION_EXPIRATION_MINUTES        = 5
+	SESSION_REFRESH_THRESHOLD_MINUTES = 1
 )
 
 func main() {
@@ -107,6 +123,9 @@ func startServerInBackground(port int, dev bool) *http.Server {
 
 	http.HandleFunc("/api/health", health)
 	http.HandleFunc("/api/authorization", authorization)
+	http.HandleFunc("/api/auth/login", login)
+	http.HandleFunc("/api/auth/refresh", refresh)
+	http.HandleFunc("/api/auth/test", authTest)
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			logger.Panic(err)
@@ -116,11 +135,106 @@ func startServerInBackground(port int, dev bool) *http.Server {
 	return srv
 }
 
+func sign(w http.ResponseWriter, claims Claims) {
+	expirationTime := time.Now().Add(time.Duration(SESSION_EXPIRATION_MINUTES) * time.Minute)
+	claims.ExpiresAt = expirationTime.Unix()
+	// Declare the token with the algorithm used for signing, and the claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Create the JWT string
+	jwt, err := token.SignedString(JWT_KEY)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Finally, we set the client cookie for "token" as the JWT we just generated
+	// we also set an expiry time which is the same as the token itself
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   jwt,
+		Expires: expirationTime,
+	})
+}
+
+func login(w http.ResponseWriter, r *http.Request) {
+	// Create the JWT claims, which includes the username and expiry time
+	claims := &Claims{
+		Username:       "a",
+		StandardClaims: jwt.StandardClaims{
+			// In JWT, the expiry time is expressed as unix milliseconds
+		},
+	}
+	sign(w, *claims)
+}
+
 func health(w http.ResponseWriter, r *http.Request) {
 	// TODO: this should be refactored into middleware / interceptor
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(HEALTH_RESPONSE)
+}
+
+func verify(w http.ResponseWriter, r *http.Request) *Claims {
+	// Extract the session cookie.
+	c, err := r.Cookie("token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusUnauthorized)
+			return nil
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return nil
+	}
+
+	// Get the JWT string from the cookie
+	tknStr := c.Value
+	// Initialize a new instance of `Claims`
+	claims := &Claims{}
+	// Parse the JWT string and store the result in `claims`.
+	// Note that we are passing the key in this method as well. This method will return an error
+	// if the token is invalid (if it has expired according to the expiry time we set on sign in),
+	// or if the signature does not match
+	token, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return JWT_KEY, nil
+	})
+	if !token.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return nil
+	}
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			w.WriteHeader(http.StatusUnauthorized)
+			return nil
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return nil
+	}
+
+	return claims
+}
+func refresh(w http.ResponseWriter, r *http.Request) {
+	claims := verify(w, r)
+	if claims == nil {
+		return
+	}
+
+	// We ensure that a new token is not issued until enough time has elapsed
+	// In this case, a new token will only be issued if the old token is within
+	// expiry threshold. Otherwise, return a bad request status
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > time.Duration(SESSION_REFRESH_THRESHOLD_MINUTES)*time.Minute {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	sign(w, *claims)
+}
+
+func authTest(w http.ResponseWriter, r *http.Request) {
+	claims := verify(w, r)
+	if claims == nil {
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Username)))
 }
 
 func authorization(w http.ResponseWriter, r *http.Request) {
