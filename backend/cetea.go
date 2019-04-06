@@ -62,6 +62,7 @@ func main() {
 	logger.Printf("Build: %s %s %s - %s \n", colorGreen, buildName, colorReset, buildTime)
 
 	port := flag.Int("port", defaultPort, "port to listen on")
+	dev := flag.Bool("dev", false, "port to listen on")
 	flag.Parse()
 
 	file, err := ioutil.ReadFile("./config/client_secret.json")
@@ -75,7 +76,7 @@ func main() {
 	}
 	idTokenAudience = []string{googleAuth.ClientID}
 
-	server := startServerInBackground(*port)
+	server := startServerInBackground(*port, *dev)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -93,10 +94,17 @@ func main() {
 	logger.Println("Exiting.")
 }
 
-func startServerInBackground(port int) *http.Server {
+func startServerInBackground(port int, dev bool) *http.Server {
 	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(port), colorReset)
 	addr := ":" + strconv.Itoa(port)
 	srv := &http.Server{Addr: addr}
+
+	if dev {
+		logger.Printf("Serving static files")
+		fs := http.FileServer(http.Dir("static"))
+		http.Handle("/", http.StripPrefix("", fs))
+	}
+
 	http.HandleFunc("/api/health", health)
 	http.HandleFunc("/api/authorization", authorization)
 	go func() {
