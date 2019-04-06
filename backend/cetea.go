@@ -18,6 +18,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/namsral/flag"
 	"github.com/tjarratt/babble"
+	xsrf "golang.org/x/net/xsrftoken"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	crm "google.golang.org/api/cloudresourcemanager/v1"
@@ -72,6 +73,8 @@ var (
 	JWT_KEY                           = []byte("my_secret_key")
 	SESSION_EXPIRATION_MINUTES        = 5
 	SESSION_REFRESH_THRESHOLD_MINUTES = 1
+	XSRF_KEY                          = "my_secret_key"
+	XSRF_ACTION_ID                    = "global"
 )
 
 func main() {
@@ -135,9 +138,16 @@ func startServerInBackground(port int, dev bool) *http.Server {
 	return srv
 }
 
-func sign(w http.ResponseWriter, claims Claims) {
+func sign(w http.ResponseWriter, username string) {
 	expirationTime := time.Now().Add(time.Duration(SESSION_EXPIRATION_MINUTES) * time.Minute)
-	claims.ExpiresAt = expirationTime.Unix()
+	claims := &Claims{
+		Username: username,
+		StandardClaims: jwt.StandardClaims{
+			// In JWT, the expiry time is expressed as unix milliseconds
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// Create the JWT string
@@ -158,17 +168,22 @@ func sign(w http.ResponseWriter, claims Claims) {
 		// nothing to do with https vs http
 		HttpOnly: true,
 	})
+	xsrfToken := xsrf.Generate(XSRF_KEY, username, XSRF_ACTION_ID)
+	http.SetCookie(w, &http.Cookie{
+		Name:  "XSRF-TOKEN",
+		Value: xsrfToken,
+		// A few issues.
+		// - x/net/xsrftoken library has expiration of 24 hours that cannot be overriden
+		// - The expiration time is slightly wrong, as some time has elapsed
+		// since xsrfToken issued at time.Now(), at a previous point in time
+		// - This might not be problematic if we always invalidate xsrf token
+		// when session cookie invalidated
+		Expires: time.Now().Add(xsrf.Timeout),
+	})
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	// Create the JWT claims, which includes the username and expiry time
-	claims := &Claims{
-		Username:       "a",
-		StandardClaims: jwt.StandardClaims{
-			// In JWT, the expiry time is expressed as unix milliseconds
-		},
-	}
-	sign(w, *claims)
+	sign(w, "a'")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +245,7 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sign(w, *claims)
+	sign(w, claims.Username)
 }
 
 func authTest(w http.ResponseWriter, r *http.Request) {
@@ -238,6 +253,18 @@ func authTest(w http.ResponseWriter, r *http.Request) {
 	if claims == nil {
 		return
 	}
+	xXsrfTokenHeader := r.Header.Get("X-XSRF-TOKEN")
+	if xXsrfTokenHeader == "" {
+		http.Error(w, "Missing XSRF", http.StatusForbidden)
+		return
+	}
+
+	isValidXsrf := xsrf.Valid(xXsrfTokenHeader, XSRF_KEY, claims.Username, XSRF_ACTION_ID)
+	if !isValidXsrf {
+		http.Error(w, "Invalid XSRF", http.StatusForbidden)
+		return
+	}
+
 	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Username)))
 }
 
