@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"io"
 	"io/ioutil"
 	"log"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	verifier "github.com/alephnan/google-auth-id-token-verifier"
+	"github.com/namsral/flag"
 	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
