@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,8 +12,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	xsrf "golang.org/x/net/xsrftoken"
 	"golang.org/x/oauth2"
-	crm "google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/option"
 )
 
 type ContainerClaims struct {
@@ -97,29 +94,13 @@ func auth_Authenticate(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Creating session for user %s", idToken.Email)
 	auth_sign(w, idToken.Email)
 
-	// TODO: refactor listing projects into separate code
-	ctx := context.Background()
-	crmService, err := crm.NewService(ctx, option.WithTokenSource(googleAuth.TokenSource(ctx, token)))
-	projectsResponse, err := crmService.Projects.List().Do()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-	projects := projectsResponse.Projects
-	// TODO: handle non 200 HTTP responses?
-	// TODO: handle empty project list
-	var projectNames = make([]string, len(projects))
-	for i := 0; i < len(projects); i++ {
-		projectNames[i] = projects[i].Name
-	}
-	responseStruct := AuthorizationResponse{Projects: projectNames}
-	response, err := json.Marshal(responseStruct)
+	response, err := project_list(token)
 	if err != nil {
 		// TODO: don't fail this hard
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-	io.WriteString(w, string(response))
+	io.WriteString(w, string(*response))
 }
 
 func auth_Logout(w http.ResponseWriter, r *http.Request) {
