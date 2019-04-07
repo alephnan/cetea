@@ -169,16 +169,19 @@ func sign(w http.ResponseWriter, username string) {
 		HttpOnly: true,
 	})
 	xsrfToken := xsrf.Generate(XSRF_KEY, username, XSRF_ACTION_ID)
+	// Since some time has elapsed after the time xsrfToken issued, we want the
+	// cookie to expire shortly before the token does.
+	xsrfCookieExpiration := time.Now().
+		Add(xsrf.Timeout).
+		Add(time.Duration(-1 * time.Minute))
 	http.SetCookie(w, &http.Cookie{
 		Name:  "XSRF-TOKEN",
 		Value: xsrfToken,
 		// A few issues.
 		// - x/net/xsrftoken library has expiration of 24 hours that cannot be overriden
-		// - The expiration time is slightly wrong, as some time has elapsed
-		// since xsrfToken issued at time.Now(), at a previous point in time
 		// - This might not be problematic if we always invalidate xsrf token
 		// when session cookie invalidated
-		Expires: time.Now().Add(xsrf.Timeout),
+		Expires: xsrfCookieExpiration,
 	})
 }
 
