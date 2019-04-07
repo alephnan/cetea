@@ -9,7 +9,26 @@ import (
 	xsrf "golang.org/x/net/xsrftoken"
 )
 
+type ContainerClaims struct {
+	ContainedJwt string `json:"jwt"`
+	jwt.StandardClaims
+}
+
+type Claims struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
+}
+
 var (
+	// TODO: Revaluate case sensitive
+	// Client browser identifiers for tokens.
+	COOKIE_SESSION_NAME = "token"
+	COOKIE_XSRF_NAME    = "XSRF-TOKEN"
+	HEADER_XSRF_NAME    = "X-XSRF-TOKEN"
+
+	// TODO: might make sense to be global
+	UNIX_EPOCH = time.Unix(0, 0)
+
 	CONTAINER_JWT_KEY                 = []byte("my_secret_key_2")
 	JWT_KEY                           = []byte("my_secret_key")
 	SESSION_EXPIRATION_MINUTES        = 5
@@ -20,6 +39,11 @@ var (
 
 func auth_Login(w http.ResponseWriter, r *http.Request) {
 	auth_sign(w)
+}
+
+func auth_Logout(w http.ResponseWriter, r *http.Request) {
+	auth_unsetCookieSession(w)
+	auth_unsetCookieXsrf(w)
 }
 
 func auth_Refresh(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +68,7 @@ func auth_AuthTest(w http.ResponseWriter, r *http.Request) {
 	if claims == nil {
 		return
 	}
-	xXsrfTokenHeader := r.Header.Get("X-XSRF-TOKEN")
+	xXsrfTokenHeader := r.Header.Get(HEADER_XSRF_NAME)
 	if xXsrfTokenHeader == "" {
 		http.Error(w, "Missing XSRF", http.StatusForbidden)
 		return
@@ -94,17 +118,9 @@ func auth_sign(w http.ResponseWriter) {
 		return
 	}
 
-	// Set the client cookie for "token" as the container JWT we just generated
-	// we also set an expiry time which is the same as the token itself.
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   *containerJwt,
-		Expires: expirationTime,
-		// prevents cookie from being read by JavaScript. Cookie will still
-		// be automatically attached to http requests. This has
-		// nothing to do with https vs http
-		HttpOnly: true,
-	})
+	// Set an expiry time which is the same as the token itself.
+	auth_setCookieSession(w, *containerJwt, expirationTime)
+
 	// By generating the XSRF token using the JWT, the xsrf token is valid
 	// only if the JWT is valid, sidestepping limitation of net/xsrftoken library
 	// having 24 hour expiration, and pose risk where if the XSRF token cookie
@@ -116,11 +132,7 @@ func auth_sign(w http.ResponseWriter) {
 	// much as the xsrf-token lifespan bounded by JWT's lifespan, as long as JWT
 	// is verified first, and expiration shortcircuits request.
 	xsrfCookieExpiration := time.Now().Add(xsrf.Timeout).Add(time.Duration(-1 * time.Minute))
-	http.SetCookie(w, &http.Cookie{
-		Name:    "XSRF-TOKEN",
-		Value:   xsrfToken,
-		Expires: xsrfCookieExpiration,
-	})
+	auth_setCookieXsrf(w, xsrfToken, xsrfCookieExpiration)
 }
 
 func auth_extractClaims(w http.ResponseWriter, jwtStr string, key []byte, claims jwt.Claims) bool {
@@ -149,7 +161,7 @@ func auth_extractClaims(w http.ResponseWriter, jwtStr string, key []byte, claims
 
 func auth_verify(w http.ResponseWriter, r *http.Request) (*Claims, *string) {
 	// Extract the session cookie.
-	c, err := r.Cookie("token")
+	c, err := r.Cookie(COOKIE_SESSION_NAME)
 	if err != nil {
 		if err == http.ErrNoCookie {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -171,4 +183,34 @@ func auth_verify(w http.ResponseWriter, r *http.Request) (*Claims, *string) {
 	}
 
 	return claims, &containedJwt
+}
+
+func auth_unsetCookieSession(w http.ResponseWriter) {
+	auth_setCookieSession(w, "", UNIX_EPOCH)
+}
+
+func auth_unsetCookieXsrf(w http.ResponseWriter) {
+	auth_setCookieXsrf(w, "", UNIX_EPOCH)
+}
+
+func auth_setCookieSession(w http.ResponseWriter, value string, t time.Time) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    COOKIE_SESSION_NAME,
+		Value:   value,
+		Expires: t,
+		// prevents cookie from being read by JavaScript. Cookie will still
+		// be automatically attached to http requests. This has
+		// nothing to do with https vs http
+		HttpOnly: true,
+	})
+}
+
+func auth_setCookieXsrf(w http.ResponseWriter, value string, t time.Time) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    COOKIE_XSRF_NAME,
+		Value:   value,
+		Expires: t,
+		// Allows cookie to be read by JavaScript
+		HttpOnly: false,
+	})
 }

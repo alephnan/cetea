@@ -14,7 +14,6 @@ import (
 	"time"
 
 	verifier "github.com/alephnan/google-auth-id-token-verifier"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/namsral/flag"
 	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
@@ -27,16 +26,6 @@ type TemplateModel_Index struct {
 	BuildName string
 	BuildTime string
 	ClientId  string
-}
-
-type ContainerClaims struct {
-	ContainedJwt string `json:"jwt"`
-	jwt.StandardClaims
-}
-
-type Claims struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
 }
 
 type AuthorizationStruct struct {
@@ -126,6 +115,8 @@ func startServerInBackground(port int, dev bool) *http.Server {
 	http.HandleFunc("/api/auth/login", auth_Login)
 	http.HandleFunc("/api/auth/refresh", auth_Refresh)
 	http.HandleFunc("/api/auth/test", auth_AuthTest)
+	http.HandleFunc("/api/auth/logout", auth_Logout)
+
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			logger.Panic(err)
