@@ -111,8 +111,10 @@ func startServerInBackground(port int, dev bool) *http.Server {
 	}
 
 	http.HandleFunc("/api/health", health)
+	// TODO: move into /api/auth
 	http.HandleFunc("/api/authorization", authorization)
-	http.HandleFunc("/api/auth/login", auth_Login)
+	// TODO: deprecate since overlaps with authorization. Retained for dev purposes.
+	// http.HandleFunc("/api/auth/login", auth_Login)
 	http.HandleFunc("/api/auth/refresh", auth_Refresh)
 	http.HandleFunc("/api/auth/test", auth_AuthTest)
 	http.HandleFunc("/api/auth/logout", auth_Logout)
@@ -150,7 +152,7 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = verifyIdToken(auth.Id_Token)
+	idToken, err := verifyIdToken(auth.Id_Token)
 	if err != nil {
 		http.Error(w, "Cannot verify id_token JWT", http.StatusForbidden)
 		return
@@ -185,6 +187,9 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
+
+	log.Printf("Creating session for user %s", idToken.Email)
+	auth_sign(w, idToken.Email)
 	io.WriteString(w, string(response))
 }
 

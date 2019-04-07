@@ -40,6 +40,7 @@ export default class Home extends Vue {
       // TODO: alert in the UI
       console.log(response.json());
     });
+    // TODO: check cookies for logged in state.
   }
   mounted() {
     this.$store.dispatch("loadAuthClient");

@@ -38,7 +38,7 @@ var (
 )
 
 func auth_Login(w http.ResponseWriter, r *http.Request) {
-	auth_sign(w)
+	auth_sign(w, "sudo")
 }
 
 func auth_Logout(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +60,7 @@ func auth_Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	auth_sign(w)
+	auth_sign(w, claims.Username)
 }
 
 func auth_AuthTest(w http.ResponseWriter, r *http.Request) {
@@ -95,14 +95,14 @@ func auth_signWithClaims(w http.ResponseWriter, key []byte, claims jwt.Claims) *
 	return &jwtStr
 }
 
-func auth_sign(w http.ResponseWriter) {
+func auth_sign(w http.ResponseWriter, username string) {
 	expirationTime := time.Now().Add(time.Duration(SESSION_EXPIRATION_MINUTES) * time.Minute)
 	// In JWT, the expiry time is expressed as unix milliseconds
 	standardClaims := jwt.StandardClaims{ExpiresAt: expirationTime.Unix()}
 
 	// Sign inner JWT
 	containedJwt := auth_signWithClaims(w, JWT_KEY, &Claims{
-		Username:       "foo",
+		Username:       username,
 		StandardClaims: standardClaims,
 	})
 	if containedJwt == nil {
