@@ -144,6 +144,9 @@ func startServerInBackground(port int, dev bool) *http.Server {
 	return srv
 }
 
+/**
+ * username: deprecated
+ */
 func sign(w http.ResponseWriter, username string) {
 	expirationTime := time.Now().Add(time.Duration(SESSION_EXPIRATION_MINUTES) * time.Minute)
 	claims := &Claims{
@@ -187,19 +190,20 @@ func sign(w http.ResponseWriter, username string) {
 		// nothing to do with https vs http
 		HttpOnly: true,
 	})
-	xsrfToken := xsrf.Generate(XSRF_KEY, username, XSRF_ACTION_ID)
+	// By generating the XSRF token using the JWT, the xsrf token is valid
+	// only if the JWT is valid, sidestepping limitation of net/xsrftoken library
+	// having 24 hour expiration, and pose risk where if the XSRF token cookie
+	// is leaked or stolen, it can only be used with the corresponding JWT and
+	// none other.
+	xsrfToken := xsrf.Generate(XSRF_KEY, containedJwt, XSRF_ACTION_ID)
 	// Since some time has elapsed after the time xsrfToken issued, we want the
 	// cookie to expire shortly before the token does.
 	xsrfCookieExpiration := time.Now().
 		Add(xsrf.Timeout).
 		Add(time.Duration(-1 * time.Minute))
 	http.SetCookie(w, &http.Cookie{
-		Name:  "XSRF-TOKEN",
-		Value: xsrfToken,
-		// A few issues.
-		// - x/net/xsrftoken library has expiration of 24 hours that cannot be overriden
-		// - This might not be problematic if we always invalidate xsrf token
-		// when session cookie invalidated
+		Name:    "XSRF-TOKEN",
+		Value:   xsrfToken,
 		Expires: xsrfCookieExpiration,
 	})
 }
@@ -215,16 +219,16 @@ func health(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(HEALTH_RESPONSE)
 }
 
-func verify(w http.ResponseWriter, r *http.Request) *Claims {
+func verify(w http.ResponseWriter, r *http.Request) (*Claims, *string) {
 	// Extract the session cookie.
 	c, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			w.WriteHeader(http.StatusUnauthorized)
-			return nil
+			return nil, nil
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return nil, nil
 	}
 
 	// Get the JWT string from the cookie
@@ -236,15 +240,15 @@ func verify(w http.ResponseWriter, r *http.Request) *Claims {
 
 	if !outerToken.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return nil
+		return nil, nil
 	}
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return nil
+			return nil, nil
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return nil, nil
 	}
 
 	tknStr = containerClaims.ContainedJwt
@@ -259,22 +263,22 @@ func verify(w http.ResponseWriter, r *http.Request) *Claims {
 	})
 	if !token.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return nil
+		return nil, nil
 	}
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return nil
+			return nil, nil
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return nil, nil
 	}
 
-	return claims
+	return claims, &containerClaims.ContainedJwt
 }
 
 func refresh(w http.ResponseWriter, r *http.Request) {
-	claims := verify(w, r)
+	claims, _ := verify(w, r)
 	if claims == nil {
 		return
 	}
@@ -291,7 +295,7 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func authTest(w http.ResponseWriter, r *http.Request) {
-	claims := verify(w, r)
+	claims, containedJwt := verify(w, r)
 	if claims == nil {
 		return
 	}
@@ -301,7 +305,7 @@ func authTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isValidXsrf := xsrf.Valid(xXsrfTokenHeader, XSRF_KEY, claims.Username, XSRF_ACTION_ID)
+	isValidXsrf := xsrf.Valid(xXsrfTokenHeader, XSRF_KEY, *containedJwt, XSRF_ACTION_ID)
 	if !isValidXsrf {
 		http.Error(w, "Invalid XSRF", http.StatusForbidden)
 		return
