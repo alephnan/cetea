@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,13 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	verifier "github.com/alephnan/google-auth-id-token-verifier"
 	"github.com/namsral/flag"
 	"github.com/tjarratt/babble"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	crm "google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/option"
 )
 
 type TemplateModel_Index struct {
@@ -28,18 +24,7 @@ type TemplateModel_Index struct {
 	ClientId  string
 }
 
-type AuthorizationStruct struct {
-	Code     string
-	Id_Token string
-}
-
 type HealthResponse struct {
-}
-
-// TODO: populate more fields
-// TODO: Support orgs and folders.
-type AuthorizationResponse struct {
-	Projects []string `json:"projects"`
 }
 
 var (
@@ -51,9 +36,9 @@ var (
 	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
 	colorReset = string([]byte{27, 91, 48, 109})
 
-	googleAuth            *oauth2.Config
-	googleIdTokenVerifier = verifier.Verifier{}
-	idTokenAudience       []string
+	// TODO: Indicate variables global with better name
+	googleAuth      *oauth2.Config
+	idTokenAudience []string
 
 	HEALTH_RESPONSE = HealthResponse{}
 
@@ -75,6 +60,7 @@ func main() {
 		// TODO: Signal bash script and/or Docker host and get them to terminate.
 		panic(err)
 	}
+	// TODO: Move into auth.go file somehow
 	googleAuth, err = google.ConfigFromJSON(file)
 	if err != nil {
 		panic(err)
@@ -112,7 +98,7 @@ func startServerInBackground(port int, dev bool) *http.Server {
 
 	http.HandleFunc("/api/health", health)
 	// TODO: move into /api/auth
-	http.HandleFunc("/api/authorization", authorization)
+	http.HandleFunc("/api/authorization", auth_Authenticate)
 	// TODO: deprecate since overlaps with authorization. Retained for dev purposes.
 	// http.HandleFunc("/api/auth/login", auth_Login)
 	http.HandleFunc("/api/auth/refresh", auth_Refresh)
@@ -133,76 +119,4 @@ func health(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(HEALTH_RESPONSE)
-}
-
-func authorization(w http.ResponseWriter, r *http.Request) {
-	// https://stackoverflow.com/questions/17478731/whats-the-point-of-the-x-requested-with-header
-	if xRequestedWithHeader := r.Header.Get("X-Requested-With"); xRequestedWithHeader != "XMLHttpRequest" {
-		http.Error(w, "Untrusted request", http.StatusForbidden)
-		return
-	}
-	if r.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
-	var auth AuthorizationStruct
-	err := json.NewDecoder(r.Body).Decode(&auth)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	idToken, err := verifyIdToken(auth.Id_Token)
-	if err != nil {
-		http.Error(w, "Cannot verify id_token JWT", http.StatusForbidden)
-		return
-	}
-
-	token, err := googleAuth.Exchange(oauth2.NoContext, auth.Code)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-	if token == nil {
-		http.Error(w, "No token response received", http.StatusForbidden)
-	}
-
-	ctx := context.Background()
-	crmService, err := crm.NewService(ctx, option.WithTokenSource(googleAuth.TokenSource(ctx, token)))
-	projectsResponse, err := crmService.Projects.List().Do()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-	projects := projectsResponse.Projects
-	// TODO: handle non 200 HTTP responses?
-	// TODO: handle empty project list
-	var projectNames = make([]string, len(projects))
-	for i := 0; i < len(projects); i++ {
-		projectNames[i] = projects[i].Name
-	}
-	responseStruct := AuthorizationResponse{Projects: projectNames}
-	response, err := json.Marshal(responseStruct)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	log.Printf("Creating session for user %s", idToken.Email)
-	auth_sign(w, idToken.Email)
-	io.WriteString(w, string(response))
-}
-
-func verifyIdToken(idToken string) (*verifier.ClaimSet, error) {
-	logger.Printf("Verifying id_token: " + idToken)
-	err := googleIdTokenVerifier.VerifyIDToken(idToken, idTokenAudience)
-	if err != nil {
-		logger.Printf("Error verifying id_token.")
-		return nil, err
-	}
-	claims, err := verifier.Decode(idToken)
-	if err != nil {
-		logger.Print("Error decoding id_token.")
-	}
-	return claims, err
 }

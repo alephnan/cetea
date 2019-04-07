@@ -1,12 +1,20 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"time"
 
+	verifier "github.com/alephnan/google-auth-id-token-verifier"
 	"github.com/dgrijalva/jwt-go"
 	xsrf "golang.org/x/net/xsrftoken"
+	"golang.org/x/oauth2"
+	crm "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/option"
 )
 
 type ContainerClaims struct {
@@ -19,7 +27,20 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+type AuthorizationStruct struct {
+	Code     string
+	Id_Token string
+}
+
+// TODO: populate more fields
+// TODO: Support orgs and folders.
+type AuthorizationResponse struct {
+	Projects []string `json:"projects"`
+}
+
 var (
+	googleIdTokenVerifier = verifier.Verifier{}
+
 	// TODO: Revaluate case sensitive
 	// Client browser identifiers for tokens.
 	COOKIE_SESSION_NAME = "token"
@@ -39,6 +60,66 @@ var (
 
 func auth_Login(w http.ResponseWriter, r *http.Request) {
 	auth_sign(w, "sudo")
+}
+
+func auth_Authenticate(w http.ResponseWriter, r *http.Request) {
+	// https://stackoverflow.com/questions/17478731/whats-the-point-of-the-x-requested-with-header
+	if xRequestedWithHeader := r.Header.Get("X-Requested-With"); xRequestedWithHeader != "XMLHttpRequest" {
+		http.Error(w, "Untrusted request", http.StatusForbidden)
+		return
+	}
+	if r.Body == nil {
+		http.Error(w, "Please send a request body", 400)
+		return
+	}
+	var auth AuthorizationStruct
+	err := json.NewDecoder(r.Body).Decode(&auth)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	idToken, err := auth_verifyIdToken(auth.Id_Token)
+	if err != nil {
+		http.Error(w, "Cannot verify id_token JWT", http.StatusForbidden)
+		return
+	}
+
+	token, err := googleAuth.Exchange(oauth2.NoContext, auth.Code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	if token == nil {
+		http.Error(w, "No token response received", http.StatusForbidden)
+	}
+
+	log.Printf("Creating session for user %s", idToken.Email)
+	auth_sign(w, idToken.Email)
+
+	// TODO: refactor listing projects into separate code
+	ctx := context.Background()
+	crmService, err := crm.NewService(ctx, option.WithTokenSource(googleAuth.TokenSource(ctx, token)))
+	projectsResponse, err := crmService.Projects.List().Do()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	projects := projectsResponse.Projects
+	// TODO: handle non 200 HTTP responses?
+	// TODO: handle empty project list
+	var projectNames = make([]string, len(projects))
+	for i := 0; i < len(projects); i++ {
+		projectNames[i] = projects[i].Name
+	}
+	responseStruct := AuthorizationResponse{Projects: projectNames}
+	response, err := json.Marshal(responseStruct)
+	if err != nil {
+		// TODO: don't fail this hard
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	io.WriteString(w, string(response))
 }
 
 func auth_Logout(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +162,20 @@ func auth_AuthTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Username)))
+}
+
+func auth_verifyIdToken(idToken string) (*verifier.ClaimSet, error) {
+	logger.Printf("Verifying id_token: " + idToken)
+	err := googleIdTokenVerifier.VerifyIDToken(idToken, idTokenAudience)
+	if err != nil {
+		logger.Printf("Error verifying id_token.")
+		return nil, err
+	}
+	claims, err := verifier.Decode(idToken)
+	if err != nil {
+		logger.Print("Error decoding id_token.")
+	}
+	return claims, err
 }
 
 func auth_signWithClaims(w http.ResponseWriter, key []byte, claims jwt.Claims) *string {
