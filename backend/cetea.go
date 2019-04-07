@@ -144,46 +144,46 @@ func startServerInBackground(port int, dev bool) *http.Server {
 	return srv
 }
 
-/**
- * username: deprecated
- */
-func sign(w http.ResponseWriter, username string) {
-	expirationTime := time.Now().Add(time.Duration(SESSION_EXPIRATION_MINUTES) * time.Minute)
-	claims := &Claims{
-		Username: username,
-		StandardClaims: jwt.StandardClaims{
-			// In JWT, the expiry time is expressed as unix milliseconds
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-
+func signWithClaims(w http.ResponseWriter, key []byte, claims jwt.Claims) *string {
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// Create the JWT string
-	containedJwt, err := token.SignedString(JWT_KEY)
+	jwtStr, err := token.SignedString(key)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return nil
+	}
+	return &jwtStr
+}
+
+func sign(w http.ResponseWriter) {
+	expirationTime := time.Now().Add(time.Duration(SESSION_EXPIRATION_MINUTES) * time.Minute)
+	// In JWT, the expiry time is expressed as unix milliseconds
+	standardClaims := jwt.StandardClaims{ExpiresAt: expirationTime.Unix()}
+
+	// Sign inner JWT
+	containedJwt := signWithClaims(w, JWT_KEY, &Claims{
+		Username:       "foo",
+		StandardClaims: standardClaims,
+	})
+	if containedJwt == nil {
 		return
 	}
 
-	containerClaims := &ContainerClaims{
-		ContainedJwt: containedJwt,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-	containerToken := jwt.NewWithClaims(jwt.SigningMethodHS256, containerClaims)
-	containerJwt, err := containerToken.SignedString(CONTAINER_JWT_KEY)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	// Sign outer JWT.
+	containerJwt := signWithClaims(w, CONTAINER_JWT_KEY, &ContainerClaims{
+		ContainedJwt:   *containedJwt,
+		StandardClaims: standardClaims,
+	})
+	if containerJwt == nil {
 		return
 	}
 
-	// Finally, we set the client cookie for "token" as the JWT we just generated
-	// we also set an expiry time which is the same as the token itself
+	// Set the client cookie for "token" as the container JWT we just generated
+	// we also set an expiry time which is the same as the token itself.
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
-		Value:   containerJwt,
+		Value:   *containerJwt,
 		Expires: expirationTime,
 		// prevents cookie from being read by JavaScript. Cookie will still
 		// be automatically attached to http requests. This has
@@ -195,12 +195,12 @@ func sign(w http.ResponseWriter, username string) {
 	// having 24 hour expiration, and pose risk where if the XSRF token cookie
 	// is leaked or stolen, it can only be used with the corresponding JWT and
 	// none other.
-	xsrfToken := xsrf.Generate(XSRF_KEY, containedJwt, XSRF_ACTION_ID)
+	xsrfToken := xsrf.Generate(XSRF_KEY, *containedJwt, XSRF_ACTION_ID)
 	// Since some time has elapsed after the time xsrfToken issued, we want the
-	// cookie to expire shortly before the token does.
-	xsrfCookieExpiration := time.Now().
-		Add(xsrf.Timeout).
-		Add(time.Duration(-1 * time.Minute))
+	// cookie to expire shortly before the token does. This doesn't matter too
+	// much as the xsrf-token lifespan bounded by JWT's lifespan, as long as JWT
+	// is verified first, and expiration shortcircuits request.
+	xsrfCookieExpiration := time.Now().Add(xsrf.Timeout).Add(time.Duration(-1 * time.Minute))
 	http.SetCookie(w, &http.Cookie{
 		Name:    "XSRF-TOKEN",
 		Value:   xsrfToken,
@@ -209,14 +209,31 @@ func sign(w http.ResponseWriter, username string) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	sign(w, "a'")
+	sign(w)
 }
 
-func health(w http.ResponseWriter, r *http.Request) {
-	// TODO: this should be refactored into middleware / interceptor
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(HEALTH_RESPONSE)
+func extractClaims(w http.ResponseWriter, jwtStr string, key []byte, claims jwt.Claims) bool {
+	// Parse the JWT string and store the result in `claims`.
+	// Note that we are passing the key in this method as well. This method will return an error
+	// if the token is invalid (if it has expired according to the expiry time we set on sign in),
+	// or if the signature does not match
+	token, err := jwt.ParseWithClaims(jwtStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+	if !token.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return false
+	}
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			w.WriteHeader(http.StatusUnauthorized)
+			return false
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return false
+	}
+
+	return true
 }
 
 func verify(w http.ResponseWriter, r *http.Request) (*Claims, *string) {
@@ -231,50 +248,18 @@ func verify(w http.ResponseWriter, r *http.Request) (*Claims, *string) {
 		return nil, nil
 	}
 
-	// Get the JWT string from the cookie
-	tknStr := c.Value
 	containerClaims := &ContainerClaims{}
-	outerToken, err := jwt.ParseWithClaims(tknStr, containerClaims, func(token *jwt.Token) (interface{}, error) {
-		return CONTAINER_JWT_KEY, nil
-	})
-
-	if !outerToken.Valid {
-		w.WriteHeader(http.StatusUnauthorized)
+	if success := extractClaims(w, c.Value, CONTAINER_JWT_KEY, containerClaims); !success {
 		return nil, nil
 	}
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return nil, nil
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return nil, nil
-	}
+	containedJwt := containerClaims.ContainedJwt
 
-	tknStr = containerClaims.ContainedJwt
-	// Initialize a new instance of `Claims`
 	claims := &Claims{}
-	// Parse the JWT string and store the result in `claims`.
-	// Note that we are passing the key in this method as well. This method will return an error
-	// if the token is invalid (if it has expired according to the expiry time we set on sign in),
-	// or if the signature does not match
-	token, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return JWT_KEY, nil
-	})
-	if !token.Valid {
-		w.WriteHeader(http.StatusUnauthorized)
-		return nil, nil
-	}
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return nil, nil
-		}
-		w.WriteHeader(http.StatusBadRequest)
+	if success := extractClaims(w, containedJwt, JWT_KEY, claims); !success {
 		return nil, nil
 	}
 
-	return claims, &containerClaims.ContainedJwt
+	return claims, &containedJwt
 }
 
 func refresh(w http.ResponseWriter, r *http.Request) {
@@ -291,7 +276,7 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sign(w, claims.Username)
+	sign(w)
 }
 
 func authTest(w http.ResponseWriter, r *http.Request) {
@@ -312,6 +297,13 @@ func authTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Username)))
+}
+
+func health(w http.ResponseWriter, r *http.Request) {
+	// TODO: this should be refactored into middleware / interceptor
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(HEALTH_RESPONSE)
 }
 
 func authorization(w http.ResponseWriter, r *http.Request) {
