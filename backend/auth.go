@@ -196,6 +196,7 @@ func auth_unsetCookieXsrf(w http.ResponseWriter) {
 func auth_setCookieSession(w http.ResponseWriter, value string, t time.Time) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    COOKIE_SESSION_NAME,
+		Path:    "/",
 		Value:   value,
 		Expires: t,
 		// prevents cookie from being read by JavaScript. Cookie will still
@@ -207,7 +208,9 @@ func auth_setCookieSession(w http.ResponseWriter, value string, t time.Time) {
 
 func auth_setCookieXsrf(w http.ResponseWriter, value string, t time.Time) {
 	http.SetCookie(w, &http.Cookie{
-		Name:    COOKIE_XSRF_NAME,
+		Name: COOKIE_XSRF_NAME,
+		// TODO: evaluate scoping this to authorized pages
+		Path:    "/",
 		Value:   value,
 		Expires: t,
 		// Allows cookie to be read by JavaScript

@@ -9,7 +9,18 @@ import { AuthState } from "../enum";
 @Component
 export default class Login extends Vue {
   login() {
-    this.$store.dispatch("signin");
+    const auth = this.$store.state.auth;
+    switch (auth.state) {
+      case AuthState.LoggedOut:
+        this.$store.dispatch("signin");
+        return;
+      case AuthState.Verified:
+         this.$store.dispatch("logout");
+        return;
+      default:
+      // TODO: handle intermediate states and cancels XHRS
+        return;
+    }
   }
 
   get msg() {
@@ -19,6 +30,8 @@ export default class Login extends Vue {
         return "Loading";
       case AuthState.LoggedOut:
         return "Sign in";
+      case AuthState.LoggingOut:
+        return "Logging out";
       case AuthState.LoggingIn:
         return "Logging in";
       case AuthState.Verifying:

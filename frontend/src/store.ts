@@ -14,6 +14,18 @@ export default new Vuex.Store({
     projects: null
   },
   mutations: {
+    loggingout(state, payload) {
+      state.auth = {
+        state: AuthState.LoggingOut,
+        email: null
+      }
+    },
+    logout(state, payload) {
+      state.auth = {
+        state: AuthState.LoggedOut,
+        email: null
+      }
+    },
     loadedAuth2(state, payload) {
       state.auth2 = payload;
       state.auth.state = AuthState.LoggedOut;
@@ -69,6 +81,21 @@ export default new Vuex.Store({
         });
         commit("showSidebar");
         dispatch("verify", response);
+      });
+    },
+    logout: ({ commit  }, payload) => {
+      commit("loggingout")
+      fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+      }).then(_ => {
+        // TODO: handle error
+        commit("logout")
       });
     },
     verify: ({ commit, dispatch, state }, payload) => {
