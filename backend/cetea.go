@@ -31,6 +31,11 @@ type TemplateModel_Index struct {
 	ClientId  string
 }
 
+type ContainerClaims struct {
+	ContainedJwt string `json:"jwt"`
+	jwt.StandardClaims
+}
+
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
@@ -70,6 +75,7 @@ var (
 		"user2": "password2",
 	}
 
+	CONTAINER_JWT_KEY                 = []byte("my_secret_key_2")
 	JWT_KEY                           = []byte("my_secret_key")
 	SESSION_EXPIRATION_MINUTES        = 5
 	SESSION_REFRESH_THRESHOLD_MINUTES = 1
@@ -151,7 +157,20 @@ func sign(w http.ResponseWriter, username string) {
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// Create the JWT string
-	jwt, err := token.SignedString(JWT_KEY)
+	containedJwt, err := token.SignedString(JWT_KEY)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	containerClaims := &ContainerClaims{
+		ContainedJwt: containedJwt,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+	containerToken := jwt.NewWithClaims(jwt.SigningMethodHS256, containerClaims)
+	containerJwt, err := containerToken.SignedString(CONTAINER_JWT_KEY)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -161,7 +180,7 @@ func sign(w http.ResponseWriter, username string) {
 	// we also set an expiry time which is the same as the token itself
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
-		Value:   jwt,
+		Value:   containerJwt,
 		Expires: expirationTime,
 		// prevents cookie from being read by JavaScript. Cookie will still
 		// be automatically attached to http requests. This has
@@ -210,6 +229,25 @@ func verify(w http.ResponseWriter, r *http.Request) *Claims {
 
 	// Get the JWT string from the cookie
 	tknStr := c.Value
+	containerClaims := &ContainerClaims{}
+	outerToken, err := jwt.ParseWithClaims(tknStr, containerClaims, func(token *jwt.Token) (interface{}, error) {
+		return CONTAINER_JWT_KEY, nil
+	})
+
+	if !outerToken.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return nil
+	}
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			w.WriteHeader(http.StatusUnauthorized)
+			return nil
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return nil
+	}
+
+	tknStr = containerClaims.ContainedJwt
 	// Initialize a new instance of `Claims`
 	claims := &Claims{}
 	// Parse the JWT string and store the result in `claims`.
@@ -234,6 +272,7 @@ func verify(w http.ResponseWriter, r *http.Request) *Claims {
 
 	return claims
 }
+
 func refresh(w http.ResponseWriter, r *http.Request) {
 	claims := verify(w, r)
 	if claims == nil {
