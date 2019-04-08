@@ -1,15 +1,15 @@
 <template>
   <div id="app">
-    <Header />
-    <div id="main">
-      <Sidenav />
-      <div id="content">
-        <router-view />
+    <Header/>
+    <div class="main">
+      <Sidenav/>
+      <div class="content">
+        <router-view/>
       </div>
     </div>
-    <BuildMetadata />
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
+    <BuildMetadata/>
+    <div>
+      <router-link to="/">Home</router-link>|
       <router-link to="/about">About</router-link>
     </div>
   </div>
@@ -55,34 +55,17 @@ export default class Home extends Vue {
   min-height: 100vh;
   flex-direction: column;
 }
-#main {
+.main {
   display: -webkit-flex;
   display: flex;
   flex: 1;
 }
-#content {
+.content {
   flex: 1;
   order: 2;
   padding-left: 25px;
   padding-right: 25px;
   padding-top: 35px;
   border-left: 1px solid rgb(235, 235, 235);
-}
-#project {
-  font-size: 14pt;
-}
-#projectlabel {
-  color: #828282;
-}
-#projectid {
-  font-size: 10pt;
-  color: #828282;
-}
-#orgline {
-  font-size: 9pt;
-  color: #828282;
-}
-#organization {
-  color: black;
 }
 </style>

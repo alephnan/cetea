@@ -15,10 +15,10 @@ export default class Login extends Vue {
         this.$store.dispatch("signin");
         return;
       case AuthState.Verified:
-         this.$store.dispatch("logout");
+        this.$store.dispatch("logout");
         return;
       default:
-      // TODO: handle intermediate states and cancels XHRS
+        // TODO: handle intermediate states and cancels XHRS
         return;
     }
   }

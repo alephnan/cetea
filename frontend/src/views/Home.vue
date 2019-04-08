@@ -1,12 +1,13 @@
 <template>
   <div>
-    <div id="orgline">
-      organization: <span id="organization">google.com</span>
+    <div class="orgline">
+      organization:
+      <span class="organization">google.com</span>
     </div>
-    <div id="project">
-      <span id="projectlabel">project:</span>
-      <span id="projectname">my-first-project</span>
-      <span id="projectid">( uplifted-scout-234505 )</span>
+    <div class="project">
+      <span class="projectlabel">project:</span>
+      <span>my-first-project</span>
+      <span class="projectid">( uplifted-scout-234505 )</span>
     </div>
   </div>
 </template>
@@ -19,3 +20,23 @@ import { Component, Vue } from "vue-property-decorator";
 })
 export default class Home extends Vue {}
 </script>
+
+<style>
+.orgline {
+  font-size: 9pt;
+  color: #828282;
+}
+.project {
+  font-size: 14pt;
+}
+.organization {
+  color: black;
+}
+.projectlabel {
+  color: #828282;
+}
+.projectid {
+  font-size: 10pt;
+  color: #828282;
+}
+</style>
