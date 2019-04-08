@@ -9,7 +9,7 @@ COPY go.mod /go/src/app/
 RUN go mod download
 # 4. Not too bad to run every time, once deps downloaded.
 COPY *.go /go/src/app/
-RUN go build -o cetea .
+RUN go build -o main .
 
 # # Lightweight Linux container
 FROM alpine
@@ -27,7 +27,7 @@ COPY config config
 RUN apk --no-cache add ca-certificates && apk --no-cache add bash
 
 # 3. Post dependency COPY
-COPY --from=build-env /go/src/app/cetea /app
+COPY --from=build-env /go/src/app/main /app
 
 # 4. Always dynamic
 ARG port=8080

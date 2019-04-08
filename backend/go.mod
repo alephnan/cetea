@@ -1,4 +1,4 @@
-module github.com/alephnan/cetea/backend
+module github.com/alephnan/pcgcp/backend
 
 go 1.12
 

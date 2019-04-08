@@ -32,7 +32,7 @@ var (
 	buildTime   = time.Now().Format(time.Stamp)
 	defaultPort = 8080
 
-	logger     = log.New(os.Stdout, "[cetea] ", 0)
+	logger     = log.New(os.Stdout, "[mylogger] ", 0)
 	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
 	colorReset = string([]byte{27, 91, 48, 109})
 

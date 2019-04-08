@@ -26,7 +26,7 @@ trap 'kill ${!}; handle_interrupt' SIGINT
 trap 'kill ${!}; handle_terminate' SIGTERM
 
 # run application
-./cetea --port=$PORT &
+./main --port=$PORT &
 pid="$!"
 
 # wait forever

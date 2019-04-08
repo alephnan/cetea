@@ -1,5 +1,4 @@
 backend/config/client_secret.json
 gin-bin
-backend/backend
-backend/cetea
+backend/main
 backend/static
