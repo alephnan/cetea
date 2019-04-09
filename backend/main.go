@@ -32,28 +32,22 @@ var (
 	buildTime   = time.Now().Format(time.Stamp)
 	defaultPort = 8080
 
-	logger     = log.New(os.Stdout, "[mylogger] ", 0)
-	colorGreen = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
-	colorReset = string([]byte{27, 91, 48, 109})
+	logger = log.New(os.Stdout, "[mylogger] ", 0)
 
 	// TODO: Indicate variables global with better name
 	googleAuth      *oauth2.Config
 	idTokenAudience []string
 
 	HEALTH_RESPONSE = HealthResponse{}
-
-	users = map[string]string{
-		"user1": "password1",
-		"user2": "password2",
-	}
 )
 
 func main() {
-	logger.Printf("Build: %s %s %s - %s \n", colorGreen, buildName, colorReset, buildTime)
-
 	port := flag.Int("port", defaultPort, "port to listen on")
 	dev := flag.Bool("dev", false, "port to listen on")
 	flag.Parse()
+
+	logger.Printf("Build: %s %s %s - %s \n", COLOR_GREEN, buildName, COLOR_RESET, buildTime)
+	logger.Printf("Dev mode %s %t %s", COLOR_CYAN, *dev, COLOR_RESET)
 
 	file, err := ioutil.ReadFile("./config/client_secret.json")
 	if err != nil {
@@ -86,7 +80,7 @@ func main() {
 }
 
 func startServerInBackground(port int, dev bool) *http.Server {
-	logger.Printf("Running on port: %s %s %s ", colorGreen, strconv.Itoa(port), colorReset)
+	logger.Printf("Running on port: %s %s %s ", COLOR_GREEN, strconv.Itoa(port), COLOR_RESET)
 	addr := ":" + strconv.Itoa(port)
 	srv := &http.Server{Addr: addr}
 
