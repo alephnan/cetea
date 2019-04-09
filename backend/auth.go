@@ -20,7 +20,7 @@ type ContainerClaims struct {
 }
 
 type Claims struct {
-	Username string `json:"username"`
+	Username string
 	jwt.StandardClaims
 }
 
@@ -138,8 +138,7 @@ func auth_AuthTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isValidXsrf := xsrf.Valid(xXsrfTokenHeader, XSRF_KEY, *containedJwt, XSRF_ACTION_ID)
-	if !isValidXsrf {
+	if isValidXsrf := xsrf.Valid(xXsrfTokenHeader, XSRF_KEY, *containedJwt, XSRF_ACTION_ID); !isValidXsrf {
 		http.Error(w, "Invalid XSRF", http.StatusForbidden)
 		return
 	}
@@ -149,8 +148,7 @@ func auth_AuthTest(w http.ResponseWriter, r *http.Request) {
 
 func auth_verifyIdToken(idToken string) (*verifier.ClaimSet, error) {
 	logger.Printf("Verifying id_token: " + idToken)
-	err := googleIdTokenVerifier.VerifyIDToken(idToken, idTokenAudience)
-	if err != nil {
+	if err := googleIdTokenVerifier.VerifyIDToken(idToken, idTokenAudience); err != nil {
 		logger.Printf("Error verifying id_token.")
 		return nil, err
 	}
@@ -162,10 +160,8 @@ func auth_verifyIdToken(idToken string) (*verifier.ClaimSet, error) {
 }
 
 func auth_signWithClaims(w http.ResponseWriter, key []byte, claims jwt.Claims) *string {
-	// Declare the token with the algorithm used for signing, and the claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// Create the JWT string
-	jwtStr, err := token.SignedString(key)
+	jwtStr, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(key)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil
