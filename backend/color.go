@@ -1,9 +1,10 @@
 package main
 
-// ANSI Escape colors
+// ANSI Escape colors as bytes:
 // https://stackoverflow.com/questions/6555995/ansi-escape-sequences-as-bytes
-var (
-	COLOR_GREEN = string([]byte{27, 91, 57, 55, 59, 51, 50, 59, 49, 109})
-	COLOR_CYAN  = string([]byte{27, 91, 57, 55, 59, 51, 54, 59, 49, 109})
-	COLOR_RESET = string([]byte{27, 91, 48, 109})
+// ANSI escape sequence as strings:
+const (
+	COLOR_GREEN = "\u001b[32m"
+	COLOR_CYAN  = "\u001b[36m"
+	COLOR_RESET = "\u001b[0m"
 )

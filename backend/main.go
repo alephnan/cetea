@@ -27,10 +27,13 @@ type TemplateModel_Index struct {
 type HealthResponse struct {
 }
 
+const (
+	DEFAULT_PORT = 8080
+)
+
 var (
-	buildName   = babble.NewBabbler().Babble()
-	buildTime   = time.Now().Format(time.Stamp)
-	defaultPort = 8080
+	buildName = babble.NewBabbler().Babble()
+	buildTime = time.Now().Format(time.Stamp)
 
 	logger = log.New(os.Stdout, "[mylogger] ", 0)
 
@@ -42,7 +45,7 @@ var (
 )
 
 func main() {
-	port := flag.Int("port", defaultPort, "port to listen on")
+	port := flag.Int("port", DEFAULT_PORT, "port to listen on")
 	dev := flag.Bool("dev", false, "port to listen on")
 	flag.Parse()
 
@@ -65,7 +68,6 @@ func main() {
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
 	sig := <-stop
 	logger.Println()
 	logger.Println("Received signal", sig.String())

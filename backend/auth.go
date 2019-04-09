@@ -35,24 +35,26 @@ type AuthorizationResponse struct {
 	Projects []string `json:"projects"`
 }
 
-var (
-	googleIdTokenVerifier = verifier.Verifier{}
-
+const (
 	// TODO: Revaluate case sensitive
 	// Client browser identifiers for tokens.
 	COOKIE_SESSION_NAME = "token"
 	COOKIE_XSRF_NAME    = "XSRF-TOKEN"
 	HEADER_XSRF_NAME    = "X-XSRF-TOKEN"
 
-	// TODO: might make sense to be global
-	UNIX_EPOCH = time.Unix(0, 0)
-
-	CONTAINER_JWT_KEY                 = []byte("my_secret_key_2")
-	JWT_KEY                           = []byte("my_secret_key")
 	SESSION_EXPIRATION_MINUTES        = 5
 	SESSION_REFRESH_THRESHOLD_MINUTES = 1
 	XSRF_KEY                          = "my_secret_key"
 	XSRF_ACTION_ID                    = "global"
+)
+
+var (
+	googleIdTokenVerifier = verifier.Verifier{}
+	// TODO: might make sense to be global
+	UNIX_EPOCH = time.Unix(0, 0)
+
+	CONTAINER_JWT_KEY = []byte("my_secret_key_2")
+	JWT_KEY           = []byte("my_secret_key")
 )
 
 func auth_Login(w http.ResponseWriter, r *http.Request) {
